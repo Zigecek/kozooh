@@ -193,7 +193,7 @@ async function question(gameID) {
   setTimeout(async () => {
     var game = await Game.findOne({ code: gameID });
     if (game.stageID == stageID) {
-      pauseOrEvaluateOrContinue(gameID);
+      result(gameID);
     }
   }, temp.roundTime * 1000);
 }
@@ -220,9 +220,36 @@ async function validate(gameID) {
 
   await Game.updateOne({ code: gameID }, { guests: game.guests });
 }
+
+async function result(gameID) {
+  await validate(gameID);
+
+  var stageID = uuid();
+  await Game.updateOne(
+    { code: gameID },
+    {
+      "state.is": "RESULT",
+      stageID,
+    }
+  );
+
+  var game = await Game.findOne({ code: gameID });
+  game.guests.forEach((g, gi) => {
+    var socket = io.sockets.sockets.get(g.socketID);
+    socket.emit("screen", {
+      is: "RESULT",
+      correct: g.answers[g.answers.length - 1]?.correct,
+    });
+  });
+  setTimeout(async () => {
+    var game = await Game.findOne({ code: gameID });
+    if (game.stageID == stageID) {
+      pauseOrEvaluateOrContinue(gameID);
+    }
+  }, 5_000);
+}
 async function pauseOrEvaluateOrContinue(gameID) {
   ///////////////////////////////////////////////////// DECIDE WHAT TO DO
-  await validate(gameID);
   var game = await Game.findOne({ code: gameID });
   var temp = await Template.findOne({ id: game.template.id });
   if (game.questionID + 1 < temp.questions.length) {
@@ -409,7 +436,7 @@ io.on("connection", (socket) => {
             game.guests.filter((x) => x.answers.length == game.questionID + 1)
               .length
           ) {
-            pauseOrEvaluateOrContinue(gameID);
+            result(gameID);
           }
         }
       }

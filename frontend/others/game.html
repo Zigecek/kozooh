@@ -145,6 +145,21 @@
           </div>
         </div>
       </div>
+      <div id="result">
+        <div style="width: 100%; height: 100%">
+          <div
+            class="align-self-center"
+            style="
+              width: 20vh;
+              height: 20vh;
+              margin: 35vh 39vh;
+              position: absolute;
+            "
+          >
+            <img id="resIcon" style="width: 20vh; height: 20vh" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -297,6 +312,14 @@
             `);
             $("#winner-list").append(html);
           });
+        } else if (screen.is == "RESULT") {
+          $("#screen").html($("#result").html());
+          $("#resIcon").attr(
+            "src",
+            screen.correct
+              ? "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Eo_circle_light-green_checkmark.svg/2048px-Eo_circle_light-green_checkmark.svg.png"
+              : "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Cross_red_circle.svg/1200px-Cross_red_circle.svg.png"
+          );
         }
       });
 
