@@ -1,0 +1,657 @@
+require("dotenv").config({
+  path: require("find-config")(".env"),
+});
+require("./utils/mongoose").init();
+
+const express = require("express");
+const app = express();
+const session = require("express-session");
+const { createServer } = require("http");
+const serveStatic = require("serve-static");
+const User = require("./models/user");
+const Game = require("./models/game");
+const Template = require("./models/template");
+const Guest = require("./models/guest");
+const bodyParser = require("body-parser");
+const MongoDBStore = require("connect-mongodb-session")(session);
+const socketIo = require("socket.io");
+const jwt = require("jsonwebtoken");
+const uuid = require("uuid").v4;
+const nodemailer = require("nodemailer");
+const morgan = require("morgan");
+const randomstring = require("randomstring");
+const path = require("path");
+
+var store = new MongoDBStore({
+  uri: process.env.MONGOOSE_KEY,
+  collection: "sessions",
+});
+
+const port = 3499;
+const httpServer = createServer(app);
+httpServer.listen(port);
+//app.use(morgan("combined"));
+
+const io = new socketIo.Server(httpServer, {
+  cors: {
+    origin: ["https://kozohorsky.xyz", "https://kozohorsky-xyz.herokuapp.com"],
+    methods: ["GET", "POST"],
+  },
+});
+
+let transporter = nodemailer.createTransport({
+  host: "smtp.seznam.cz",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.SEZNAM_EMAIL,
+    pass: process.env.SEZNAM_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+store.on("error", function (error) {
+  console.log(error);
+});
+
+var auth = function (req, res, next) {
+  if (req.session.user) {
+    return next();
+  } else {
+    return res.sendStatus(401);
+  }
+};
+
+/////////////////////////////////////// MIDDLEWARES ////////////////////////
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(
+  session({
+    secret: process.env.SECRET,
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 3, // 3 days
+    },
+    store: store,
+  })
+);
+
+async function getID() {
+  var code = randomstring.generate({
+    length: 6,
+    charset: "numeric",
+  });
+  const gm = await Game.findOne({ id: code });
+  if (gm) {
+    return await getID();
+  } else {
+    return code;
+  }
+}
+
+////////////////////////////////////////// APP ROUTES ////////////////////////////
+
+app.get("/odhlaseni", function (req, res) {
+  req.session.destroy();
+  res.redirect("/");
+});
+app.use("/ucet", auth);
+app.use("/prihlaseni", (req, res, next) => {
+  if (req.session.user) {
+    return res.redirect("/?alert=alrLoged");
+  } else {
+    return next();
+  }
+});
+app.get("/others/game.html", (req, res) => {
+  res.sendStatus(401);
+});
+
+//////////////////////////////////////////////// STATIC ///////////////////////////
+
+app.use(serveStatic("./frontend/"));
+
+////////////////////////////////// API /////////////////////////////////////////////
+var api = express.Router({ mergeParams: true });
+app.use("/api", api);
+
+io.on("connection", (socket) => {
+  socket.on("start", async (gameID) => {
+    var game = await Game.findOne({ code: gameID });
+    if (game) {
+      if (game.controlers.includes(socket.id)) {
+        question(0, gameID);
+      }
+    }
+
+    async function question(index, gameID) {
+      var game = await Game.findOne({ code: gameID });
+
+      await Game.updateOne(
+        { code: gameID },
+        {
+          "state.is": "COUNTDOWN",
+        }
+      );
+
+      function countDown(t) {
+        io.to(gameID).emit("screen", {
+          is: "COUNTDOWN",
+          time: t,
+        });
+      }
+
+      countDown("5");
+      setTimeout(() => {
+        countDown("4");
+      }, 1_000);
+      setTimeout(() => {
+        countDown("3");
+      }, 2_000);
+      setTimeout(() => {
+        countDown("2");
+      }, 3_000);
+      setTimeout(() => {
+        countDown("1");
+      }, 4_000);
+      setTimeout(async () => {
+        game = await Game.findOne({ code: gameID });
+        var temp = await Template.findOne({ id: game.template.id });
+        await Game.updateOne(
+          { code: gameID },
+          {
+            "state.is": "QUESTION",
+            questionID: index,
+          }
+        );
+
+        io.to(gameID).emit("screen", {
+          is: temp.show ? "QUESTION-SHOWED" : "QUESTION-HIDDEN",
+          question: temp.show ? temp.questions[index].question : null,
+          answers: temp.show
+            ? temp.questions[index].answers.map((x) => x.answer)
+            : null,
+        });
+
+        setTimeout(async () => {
+          await Game.updateOne(
+            { code: gameID },
+            {
+              "state.is": "CALCULATING",
+            }
+          );
+          game = await Game.findOne({ code: gameID });
+          game.guests.forEach((g, i) => {
+            if (!g.answers[index]) {
+              game.guests[i].answers.push({
+                correct: false,
+                position: null,
+                gainedCoins: 0,
+              });
+            }
+          });
+
+          if (index + 1 < temp.questions.length) {
+            // BUDE DALŠÍ
+            if (temp.pause) {
+              var sortedGuests = game.guests;
+
+              sortedGuests.sort((a, b) => {
+                if (a.coins > b.coins) return -1;
+                else return 1;
+              });
+
+              io.to(gameID).emit("screen", {
+                is: "PAUSE",
+                guests: sortedGuests.map((x) => ({
+                  nickname: x.nickname,
+                  coins: x.coins,
+                })),
+              });
+              setTimeout(() => {
+                question(index + 1, gameID);
+              }, 10_000);
+            } else {
+              question(index + 1, gameID);
+            }
+          } else {
+            console.log("vyhodnoceni");
+            // poser se treba
+          }
+        }, temp.roundTime * 1000);
+      }, 5_000);
+    }
+  });
+  socket.on("answer", async (res) => {
+    const { index, gameID } = res;
+    var game = await Game.findOne({ code: gameID });
+    var temp = await Template.findOne({ id: game.template.id });
+    if (game) {
+      var guest = game.guests.find((x) => x.socketID == socket.id);
+      if (guest) {
+        if (game.state.is == "QUESTION") {
+          console.log("question");
+          if (
+            temp.questions[game.questionID]?.answers[index]?.correct == true
+          ) {
+            console.log("correct");
+            var newPos = game.answerLastPos + 1;
+            function scaleValue(value, from, to) {
+              var scale = (to[1] - to[0]) / (from[1] - from[0]);
+              var capped =
+                Math.min(from[1], Math.max(from[0], value)) - from[0];
+              return ~~(capped * scale + to[0]);
+            }
+            var coins = scaleValue(
+              game.answerLastPos,
+              [0, game.guests.length / 2],
+              [1000, 600]
+            );
+            console.log(coins);
+
+            guest.answers.push({
+              correct: true,
+              position: newPos,
+              gainedCoins: coins,
+            });
+            guest.coins += coins;
+            await Game.updateOne(
+              { "guests.socketID": socket.id },
+              { $set: { "guests.$": guest } }
+            );
+            await Game.updateOne({ code: gameID }, { answerLastPos: newPos });
+          } else {
+            guest.answers.push({
+              correct: false,
+              position: null,
+              gainedCoins: 0,
+            });
+            await Game.updateOne(
+              { "guests.socketID": socket.id },
+              { $set: { "guests.$": guest } }
+            );
+          }
+        }
+      }
+    }
+  });
+});
+
+api.post("/game-auth", async (req, res) => {
+  const { gameID, sid } = req.body;
+  if (!/^\d{6}$/.test(gameID)) return;
+  var game = await Game.findOne({ code: gameID });
+  if (game) {
+    console.log("game");
+    if (req.session?.user == game.author.username) {
+      console.log("controler");
+      await Game.findOneAndUpdate(
+        { code: gameID },
+        { $push: { controlers: sid } }
+      );
+      console.log("databaze");
+      var socket = io.sockets.sockets.get(sid);
+      console.log("socket");
+      if (socket) {
+        console.log("ano");
+        socket.emit("auth", {
+          role: "CONTROL",
+        });
+        socket.join(gameID);
+      }
+    } else {
+      console.log("guest");
+      var guest = game.guests.find((g) => g.guestID == req.session.guestID);
+      if (guest) {
+        console.log("guest nalezen");
+        await Game.updateOne({ code: gameID }, { $pull: { guests: guest } });
+        console.log("pull");
+        guest.socketID = sid;
+        await Game.updateOne({ code: gameID }, { $push: { guests: guest } });
+        console.log("push");
+        var socket = io.sockets.sockets.get(sid);
+        console.log("socket");
+        if (socket) {
+          console.log("ano");
+          socket.emit("auth", {
+            role: "GUEST",
+            nickname: guest.nickname,
+            coins: guest.coins,
+          });
+          socket.join(gameID);
+          io.to(gameID).emit("screen", {
+            is: "STARTING",
+            guests: game.guests.map((g) => ({
+              nickname: g.nickname,
+              coins: g.coins,
+            })),
+          });
+        }
+      } else {
+        console.log("guesnt nen");
+        io.sockets.sockets.get(sid)?.disconnect(true);
+      }
+    }
+  }
+  res.sendStatus(200);
+});
+
+api.get("/start", auth, async (req, res) => {
+  const id = req.query.id;
+  const gameID = await getID();
+  const game = await Game.create({
+    _id: new require("mongoose").Types.ObjectId(),
+    code: gameID,
+    template: {
+      id: id,
+    },
+    state: {
+      is: "STARTING",
+    },
+    guests: [],
+    coins: [],
+    author: {
+      username: req.session.user,
+    },
+  });
+  createGame(gameID);
+  res.redirect("/" + gameID);
+});
+
+function createGame(gameID) {
+  app.get("/" + gameID, async (req, res) => {
+    var game = await Game.findOne({ code: gameID });
+    var guest = game.guests.find((g) => g.guestID == req.session.guestID);
+
+    if (guest) {
+      res.status(200).sendFile(path.resolve("frontend/others/game.html"));
+    } else if (req.session.user == game.author.username) {
+      res.status(200).sendFile(path.resolve("frontend/others/game.html"));
+    } else {
+      res.sendStatus(401);
+    }
+  });
+}
+
+app.post("/join", async (req, res) => {
+  const { gameID, nickname } = req.body;
+  if (!gameID) {
+    return res.status(200).send({
+      stav: "missingG",
+    });
+  }
+  if (!nickname) {
+    return res.status(200).send({
+      stav: "missingN",
+    });
+  }
+  var game = await Game.findOne({ code: gameID });
+  console.log("ano");
+  if (game) {
+    console.log(game);
+    if (game.state.is == "STARTING") {
+      console.log("STARTING");
+      var id = uuid();
+      await Game.updateOne(
+        { code: gameID },
+        {
+          $push: {
+            guests: {
+              guestID: id,
+              nickname,
+              socketID: "",
+              coins: 0,
+              answers: [],
+            },
+          },
+        }
+      );
+      req.session.guestID = id;
+      return res.status(202).send({
+        stav: "in",
+      });
+    } else {
+      return res.status(200).send({
+        stav: "notStarting",
+      });
+    }
+  } else {
+    return res.status(200).send({
+      stav: "notExist",
+    });
+  }
+});
+
+api.get("/user", async (req, res) => {
+  const user = await User.findOne({ username: req.session.user });
+  res.status(200).send(user);
+});
+
+api.post("/log", async (req, res) => {
+  if (!req.body.username || !req.body.password) {
+    return res.status(200).send({
+      stav: "fillAll",
+    });
+  } else {
+    const { username, password } = req.body;
+    try {
+      const user = await User.findOne({ username });
+
+      if (!user) {
+        return res.status(200).send({
+          stav: "userIsnt",
+        });
+      } else {
+        if (user.verified.is) {
+          if (user.password == password) {
+            req.session.user = username;
+            return res.status(200).send({
+              stav: "loged",
+            });
+          } else {
+            return res.status(200).send({
+              stav: "pswd",
+            });
+          }
+        } else {
+          return res.status(200).send({
+            stav: "notVerified",
+          });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+});
+
+api.post("/reg", async (req, res) => {
+  if (!req.body.username || !req.body.password || !req.body.email) {
+    return res.status(200).send({
+      stav: "fillAll",
+    });
+  } else {
+    const { username, password, email } = req.body;
+    try {
+      const user1 = await User.findOne({ username });
+      const user2 = await User.findOne({ email });
+
+      if (user1 || user2) {
+        return res.status(200).send({
+          stav: "used",
+        });
+      } else {
+        const user = await User.create({
+          _id: new require("mongoose").Types.ObjectId(),
+          email: email.toLowerCase(),
+          registered: Date.now(),
+          verified: {
+            is: false,
+            time: null,
+          },
+          password,
+          username,
+          templates: [],
+        });
+
+        const verToken = jwt.sign(
+          {
+            id: user._id,
+          },
+          process.env.VERTOKEN_KEY,
+          {
+            expiresIn: "2h",
+          }
+        );
+
+        transporter.sendMail(
+          {
+            from: "kozooh@kozohorsky.xyz",
+            to: [email.toLowerCase()],
+            subject: "Registrace",
+            html: `<h1>Ověření emailu</h1><a href="${
+              req.hostname == "localhost" ? "http" : "https"
+            }://${
+              req.hostname
+            }/api/ver?token=${verToken}">Ověřit</a><p>Pokud jste se neregistrovali na kozooh.kozohorsky.xyz, na nic neklikejte.</p>`,
+          },
+          (err, info) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+          }
+        );
+        res.sendFile(__dirname + "../frontend/others/verify.html");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+});
+
+api.get("/user-games", auth, async (req, res) => {
+  const templates = await Template.find({});
+  var userTemplates = templates.filter(
+    (x) => x.author.username == req.session.user
+  );
+
+  res.status(200).send({ templates: userTemplates });
+});
+
+api.post("/create-template", auth, async (req, res) => {
+  var { questions, name, roundTime, show, pause } = req.body;
+  console.log(req.body);
+  if (roundTime <= 0) {
+    return res.status(200).send({
+      stav: "negative",
+    });
+  }
+  name.trim();
+  if (!name || name == "" || /^\s+$/.test(name)) {
+    return res.status(200).send({
+      stav: "missingName",
+    });
+  }
+  var q2 = questions.filter((x) => x != undefined);
+  q2.forEach((x, i) => {
+    q2[i].answers = x.answers.filter((y) => y != undefined);
+  });
+  if (q2.length == 0) {
+    return res.status(200).send({
+      stav: "length0",
+    });
+  }
+
+  q2.forEach((x, i) => {
+    q2[i].question = x.question.trim();
+    x.answers.forEach((y, ii) => {
+      q2[i].answers[ii].answer = y.answer.trim();
+    });
+  });
+
+  var missingA = false;
+  var missingCorrectA = false;
+  var emptyA = false;
+  q2.forEach((x, i) => {
+    if (x.answers.length == 0) {
+      missingA = true;
+    } else {
+      var mis = false;
+      x.answers.forEach((y, ii) => {
+        if (y.correct) {
+          mis = true;
+        }
+        if (/^\s+$/.test(y.answer)) {
+          emptyA.true;
+        }
+      });
+      missingCorrectA = !mis;
+    }
+  });
+  if (missingA) {
+    return res.status(200).send({
+      stav: "missingA",
+    });
+  }
+  if (emptyA) {
+    return res.status(200).send({
+      stav: "emptyA",
+    });
+  }
+  if (missingCorrectA) {
+    return res.status(200).send({
+      stav: "missingCorrectA",
+    });
+  }
+
+  const template = await Template.create({
+    _id: new require("mongoose").Types.ObjectId(),
+    id: uuid(),
+    used: 0,
+    questions: q2,
+    author: {
+      username: req.session.user,
+    },
+    created: Date.now(),
+    name,
+    show,
+    pause,
+    roundTime,
+  });
+
+  const user = await User.findOne({ username: req.session.user });
+  var templates = user.templates;
+  templates.push(template.id);
+  await User.findOneAndUpdate({ username: req.session.user }, { templates });
+
+  return res.status(200).send({
+    stav: "redirect",
+  });
+});
+
+api.get("/smazat", async (req, res) => {
+  const id = req.query.id;
+  const temp = await Template.findOne({ id });
+  await Template.deleteOne({ id });
+  res.redirect("/ucet/?alert=deleted?name=" + temp.name);
+});
+
+api.get("/ver", async (req, res) => {
+  var verToken = req.query.token;
+  try {
+    const decoded = jwt.verify(verToken, process.env.VERTOKEN_KEY);
+    const user = await User.findOneAndUpdate(
+      { _id: decoded.id },
+      { verified: { is: true, when: Date.now() } }
+    );
+    return res.status(200).redirect("/prihlaseni?alert=verified");
+  } catch (err) {
+    return res.status(401).send("Invalid Token");
+  }
+});
+
+console.log("Kozooh - " + port);

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="CZ-cs">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kozooh - Registrace</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+    />
+  </head>
+
+  <body>
+    <div class="position-fixed end-0" id="alerts"></div>
+    <div class="row justify-content-center m-0">
+      <div class="m-5 col-5">
+        <form
+          class="p-4 border rounded-3 w-100 needs-validation"
+          id="sendForm"
+          novalidate
+        >
+          <div class="mb-3">
+            <label for="username" class="form-label">Uživatelské jméno</label>
+            <div class="input-group has-validation">
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                autocomplete="off"
+                required
+              />
+              <div class="invalid-feedback">Zvol si přezdívku.</div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-group has-validation">
+              <span class="input-group-text" id="znak">@</span>
+              <input
+                type="text"
+                class="form-control"
+                id="email"
+                aria-describedby="znak"
+                pattern="^\S+@\S+\.\S+$"
+                required
+              />
+              <div class="invalid-feedback">Neplatný email.</div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Heslo</label>
+            <div class="input-group has-validation">
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                autocomplete="off"
+                required
+              />
+              <div class="valid-feedback invalid-feedback">
+                <p id="letter-p">
+                  Malé a velké písmeno
+                  <span id="letter-span"></span>
+                </p>
+                <p id="number-p">
+                  Číslo a speciální znak
+                  <span id="number-span"></span>
+                </p>
+                <p id="length-p">
+                  Dlouhé 8-24 znaků <span id="length-span"></span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="password-again" class="form-label">Heslo znovu</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password-again"
+              autocomplete="off"
+              required
+            />
+            <div class="invalid-feedback">Hesla se neshodují.</div>
+          </div>
+          <div class="mb-3">
+            <button type="submit" class="btn btn-primary btn-lg" id="submit">
+              Registrovat
+            </button>
+            <img
+              id="loading-blue"
+              class="visually-hidden"
+              src="../loading-blue.gif"
+              width="48"
+              height="48"
+            />
+          </div>
+        </form>
+        <div class="m-3 text-center">
+          <p>
+            Už máš vytvořený účet?
+            <span><a href="/prihlaseni"> Přihlášení</a></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <footer
+      class="w-100 footer mt-auto py-3 bg-light position-fixed bottom-0 start-50 translate-middle-x"
+    >
+      <div class="container">
+        <div class="row">
+          <div class="col-8">
+            <a href="/">Hlavní</a>
+          </div>
+          <div id="account" class="col-4">
+            <a href="/prihlaseni">Přihlášení</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const pswdRE =
+          /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!"'#$%&()*+,-.\/\\:;<=>?@[\]^_`{|}~])[A-Za-z\d!"'#$%&()*+,-.\/\\:;<=>?@[\]^_`{|}~]{8,24}$/,
+        letterSM = /[a-z]/,
+        letterBG = /[A-Z]/,
+        number = /[0-9]/,
+        character = /[!"'#$%&()*+,-.\/\\:;<=>?@[\]^_`{|}~]/,
+        x = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>`,
+        v = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/></svg>`,
+        green = "color: green",
+        red = "color: red";
+      var pswdagEdited = false;
+      axios
+        .get("/api/user")
+        .then(function (res) {
+          if (res.data.username) {
+            $("#account").html(`
+            <a href="/ucet">${res.data.username}</a>
+            -
+            <a href="/odhlaseni">Odhlásit</a>`);
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+
+      var inputs = document.querySelectorAll("input");
+
+      $("#length-span").html(x);
+      $("#number-span").html(x);
+      $("#letter-span").html(x);
+
+      function validate(event, input) {
+        if (!["password", "password-again"].includes(input.id)) {
+          if (!input.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+
+          input.parentElement.classList.add("was-validated");
+        } else {
+          if (input.id == "password") {
+            if (
+              letterSM.test($("#password").val()) &&
+              letterBG.test($("#password").val())
+            ) {
+              $("#letter-p").attr("style", green);
+              $("#letter-span").html(v);
+            } else {
+              $("#letter-p").attr("style", red);
+              $("#letter-span").html(x);
+            }
+            if (
+              number.test($("#password").val()) &&
+              character.test($("#password").val())
+            ) {
+              $("#number-p").attr("style", green);
+              $("#number-span").html(v);
+            } else {
+              $("#number-p").attr("style", red);
+              $("#number-span").html(x);
+            }
+            if (
+              8 <= $("#password").val().length &&
+              $("#password").val().length <= 24
+            ) {
+              $("#length-p").attr("style", green);
+              $("#length-span").html(v);
+            } else {
+              $("#length-p").attr("style", red);
+              $("#length-span").html(x);
+            }
+            if (pswdRE.test(input.value)) {
+              input.classList.add("is-valid");
+              input.classList.remove("is-invalid");
+            } else {
+              input.classList.add("is-invalid");
+              input.classList.remove("is-valid");
+              event.preventDefault();
+              event.stopPropagation();
+            }
+
+            if (pswdagEdited) {
+              if (
+                pswdRE.test(input.value) &&
+                input.value == $("#password-again").val()
+              ) {
+                $("#password-again").addClass("is-valid");
+                $("#password-again").removeClass("is-invalid");
+              } else {
+                $("#password-again").addClass("is-invalid");
+                $("#password-again").removeClass("is-valid");
+                event.preventDefault();
+                event.stopPropagation();
+              }
+            }
+          } else {
+            pswdagEdited = true;
+            if (
+              pswdRE.test(input.value) &&
+              input.value == $("#password").val()
+            ) {
+              input.classList.add("is-valid");
+              input.classList.remove("is-invalid");
+            } else {
+              input.classList.add("is-invalid");
+              input.classList.remove("is-valid");
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }
+        }
+      }
+      inputs.forEach(function (input) {
+        input.addEventListener("input", (e) => validate(e, input), false);
+        input.addEventListener("blur", (e) => validate(e, input), false);
+        input.addEventListener(
+          "focus",
+          function (event) {
+            input.parentElement.classList.remove("was-validated");
+            $("#sendForm").removeClass("was-validated");
+          },
+          false
+        );
+      });
+
+      var forms = document.querySelectorAll(".needs-validation");
+      Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener(
+          "submit",
+          function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+
+            if (
+              pswdRE.test($("#password").val()) &&
+              $("#password").val() == $("#password-again").val()
+            ) {
+              event.preventDefault();
+              $("#submit").addClass("visually-hidden");
+              $("#loading-blue").removeClass("visually-hidden");
+
+              axios
+                .post("/api/reg", {
+                  username: $("#username").val(),
+                  email: $("#email").val(),
+                  password: $("#password").val().hashCode(),
+                })
+                .then(function (res) {
+                  $("#submit").removeClass("visually-hidden");
+                  $("#loading-blue").addClass("visually-hidden");
+                  if (res.data.stav == "used") {
+                    alertos(
+                      5000,
+                      "danger",
+                      "Uživatelské jméno nebo email je už používán.",
+                      1000
+                    );
+                  } else if (res.data.stav == "fillAll") {
+                    alertos(5000, "danger", "Vyplňte všechna políčka.", 1000);
+                  }
+                })
+                .catch(function (error) {
+                  $("#submit").removeClass("visually-hidden");
+                  $("#loading-blue").addClass("visually-hidden");
+                  console.log(error);
+                });
+            } else {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            form.classList.add("was-validated");
+          },
+          false
+        );
+      });
+
+      String.prototype.hashCode = function () {
+        let hash = 0;
+        for (let i = 0; i < this.length; i++) {
+          const char = this.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash &= hash;
+        }
+        return new Uint32Array([hash])[0].toString(36);
+      };
+
+      function alertos(time, type, text, fadeouttime) {
+        var div = document.createElement("div");
+        var el = $(div);
+        el.addClass(["opacity-75", "alert", `alert-${type}`, "m-2"]);
+        el.attr("role", "alert");
+        el.text(text);
+        el.appendTo("#alerts");
+
+        setTimeout(() => {
+          el.fadeOut(0.75 * fadeouttime);
+          setTimeout(() => {
+            el.removeClass("opacity-75");
+          }, 0.25 * fadeouttime);
+        }, time);
+      }
+    </script>
+  </body>
+</html>

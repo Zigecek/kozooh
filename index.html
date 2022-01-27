@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      var cp = 15; // celkový počet hráčů
+      var p = 8; // pozice
+
+      var maxPos = 0;
+      var minPos = cp / 2;
+      var maxScore = 1000; // maximální skore
+      var minScore = 600;
+
+      var c = (p - minPos) / (maxPos - minPos);
+      var realScore = c * (maxScore - minScore) + minScore;
+
+      var score = realScore < minScore ? minScore : realScore;
+      console.log(score);
+    </script>
+  </body>
+</html>
