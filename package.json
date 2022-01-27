@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "start": "node ./backend/kozooh.js"
+    "i": "npm i body-parser@latest connect-mongodb-session@latest dotenv@latest express@latest express-session@latest find-config@latest jsonwebtoken@latest mongoose@5.13.7 morgan@latest nodemailer@latest randomstring@latest serve-static@latest socket.io@latest uuid@latest",
+    "uni": "npm uninstall body-parser connect-mongodb-session dotenv express express-session find-config jsonwebtoken mongoose morgan nodemailer randomstring serve-static socket.io uuid",
+    "start": "pm2 start ./backend/kozooh.js --time",
+    "start2": "node ./backend/kozooh.js"
   },
   "dependencies": {
     "body-parser": "^1.19.1",
@@ -11,7 +14,7 @@
     "find-config": "^1.0.0",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.13.7",
+    "mongoose": "^6.1.8",
     "morgan": "^1.10.0",
     "nodemailer": "^6.7.2",
     "randomstring": "^1.2.1",

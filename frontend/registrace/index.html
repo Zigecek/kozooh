@@ -7,14 +7,15 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
     />
+    <link rel="stylesheet" href="../style.css" />
   </head>
 
-  <body>
+  <body class="bg-bg">
     <div class="position-fixed end-0" id="alerts"></div>
     <div class="row justify-content-center m-0">
       <div class="m-5 col-5">
         <form
-          class="p-4 border rounded-3 w-100 needs-validation"
+          class="p-4 border rounded-3 w-100 needs-validation bg-white"
           id="sendForm"
           novalidate
         >
@@ -105,7 +106,7 @@
     </div>
 
     <footer
-      class="w-100 footer mt-auto py-3 bg-light position-fixed bottom-0 start-50 translate-middle-x"
+      class="w-100 footer mt-auto py-3 bg-panel position-fixed bottom-0 start-50 translate-middle-x"
     >
       <div class="container">
         <div class="row">
@@ -287,6 +288,8 @@
                     );
                   } else if (res.data.stav == "fillAll") {
                     alertos(5000, "danger", "Vyplňte všechna políčka.", 1000);
+                  } else if (res.data.includes("<!DOCTYPE html>")) {
+                    document.write(res.data);
                   }
                 })
                 .catch(function (error) {

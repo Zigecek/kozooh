@@ -7,9 +7,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
     />
+    <link rel="stylesheet" href="../style.css" />
   </head>
 
-  <body>
+  <body class="bg-bg">
     <div class="position-fixed end-0" id="alerts"></div>
     <div class="container">
       <h1 class="text-center fs-1 m-3">Účet</h1>
@@ -35,7 +36,7 @@
     ></div>
 
     <footer
-      class="w-100 footer mt-auto py-3 bg-light position-fixed bottom-0 start-50 translate-middle-x"
+      class="w-100 footer mt-auto py-3 bg-panel position-fixed bottom-0 start-50 translate-middle-x"
     >
       <div class="container">
         <div class="row">
@@ -63,7 +64,6 @@
         .forEach(function (item) {
           queryDict[item.split("=")[0]] = item.split("=")[1];
         });
-      console.log(queryDict);
 
       if (queryDict.alert == "deleted") {
         alertos(5000, "success", `"${queryDict.name}" úspěšně smazána.`, 1000);
@@ -74,8 +74,8 @@
         .then(function (res) {
           if (res.data.templates) {
             res.data.templates.forEach((t) => {
-              $("#template-list").html(
-                $("#template-list").html() +
+              $("#template-list").append(
+                $.parseHTML(
                   `
 <li class="list-group-item">
   <div class="d-flex bd-highlight">
@@ -119,6 +119,7 @@
   </div>
 </li>
                   `
+                )
               );
             });
           } else {

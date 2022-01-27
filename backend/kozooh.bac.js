@@ -121,236 +121,180 @@ app.use(serveStatic("./frontend/"));
 var api = express.Router({ mergeParams: true });
 app.use("/api", api);
 
-///////////////////////////////// HRA /////////////////////////////////////////////
-
-async function runCountdown(gameID) {
-  //////////////////////////// COUNTDOWN
-  const stageID = uuid();
-  await Game.updateOne(
-    { code: gameID },
-    {
-      "state.is": "COUNTDOWN",
-      stageID,
-    }
-  );
-
-  function countDown(t) {
-    io.to(gameID).emit("screen", {
-      is: "COUNTDOWN",
-      time: t,
-    });
-  }
-  countDown("5");
-  setTimeout(() => {
-    countDown("4");
-  }, 1_000);
-  setTimeout(() => {
-    countDown("3");
-  }, 2_000);
-  setTimeout(() => {
-    countDown("2");
-  }, 3_000);
-  setTimeout(() => {
-    countDown("1");
-  }, 4_000);
-  setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
-    if (game.stageID == stageID) {
-      question(gameID);
-    }
-  }, 5_000);
-}
-
-async function question(gameID) {
-  //////////////////////////////////////// QUESTION
-  var game = await Game.findOne({ code: gameID });
-  var temp = await Template.findOne({ id: game.template.id });
-  var index = game.questionID + 1;
-  var stageID = uuid();
-  await Game.updateOne(
-    { code: gameID },
-    {
-      "state.is": "QUESTION",
-      questionID: game.questionID + 1,
-      answerLastPos: 0,
-      stageID,
-    }
-  );
-
-  io.to(gameID).emit("screen", {
-    is: temp.show ? "QUESTION-SHOWED" : "QUESTION-HIDDEN",
-    question: temp.show ? temp.questions[index].question : null,
-    answers: temp.show
-      ? temp.questions[index].answers.map((x) => x.answer)
-      : temp.questions[index].answers.map((x) => ""),
-  });
-
-  io.to(gameID + "control").emit("screen", {
-    is: "QUESTION-SHOWED",
-    question: temp.questions[index].question,
-    answers: temp.questions[index].answers.map((x) => x.answer),
-  });
-  setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
-    if (game.stageID == stageID) {
-      pauseOrEvaluateOrContinue(gameID);
-    }
-  }, temp.roundTime * 1000);
-}
-
-async function validate(gameID) {
-  ///////////////////////////////////////////////////////// VALIDATE (AFTER QUESTION)
-  var game = await Game.findOne({ code: gameID });
-  await Game.updateOne(
-    { code: gameID },
-    {
-      "state.is": "CALCULATING",
-    }
-  );
-  game = await Game.findOne({ code: gameID });
-  game.guests.forEach((g, i) => {
-    if (!g.answers[game.questionID]) {
-      game.guests[i].answers.push({
-        correct: false,
-        position: null,
-        gainedCoins: 0,
-      });
-    }
-  });
-
-  await Game.updateOne({ code: gameID }, { guests: game.guests });
-}
-async function pauseOrEvaluateOrContinue(gameID) {
-  ///////////////////////////////////////////////////// DECIDE WHAT TO DO
-  await validate(gameID);
-  var game = await Game.findOne({ code: gameID });
-  var temp = await Template.findOne({ id: game.template.id });
-  if (game.questionID + 1 < temp.questions.length) {
-    if (temp.pause) {
-      pause(gameID);
-    } else {
-      question(gameID);
-    }
-  } else {
-    evaluate(gameID);
-  }
-}
-async function pause(gameID) {
-  //////////////////////////////////////////////////// PAUSE
-  var game = await Game.findOne({ code: gameID });
-  var temp = await Template.findOne({ id: game.template.id });
-  const stageID = uuid();
-
-  await Game.updateOne(
-    { code: gameID },
-    {
-      "state.is": "PAUSED",
-      stageID,
-    }
-  );
-
-  var sortedGuests = game.guests;
-
-  sortedGuests.sort((a, b) => {
-    if (a.coins > b.coins) return -1;
-    else return 1;
-  });
-
-  io.to(gameID).emit("screen", {
-    is: "PAUSE",
-    guests: sortedGuests.map((x) => ({
-      nickname: x.nickname,
-      coins: x.coins,
-    })),
-  });
-  setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
-    if (game.stageID == stageID) {
-      runCountdown(gameID);
-    }
-  }, temp.pauseTime * 1000);
-}
-
-async function evaluate(gameID) {
-  /////////////////////////////////////// EVAL
-  var game = await Game.findOne({ code: gameID });
-  var temp = await Template.findOne({ id: game.template.id });
-
-  await Game.updateOne(
-    { code: gameID },
-    {
-      "state.is": "EVALUATING",
-    }
-  );
-
-  var average = {
-    players: game.guests.length,
-    questions: temp.questions,
-  };
-  var guests = [];
-
-  game.guests.forEach((g, gi) => {
-    var correct = g.answers.filter((a) => a.correct).length; // počet spravnych odpovedi
-    var uspesnost = Math.floor((correct / average.questions.length) * 100); // uspesnost v procentech
-    g.answers.forEach((a, i) => {
-      var aIndex = temp.questions[i].answers.indexOf(
-        temp.questions[i].answers.find((x) => x.correct)
-      ); // zjisti index spravne odpovedi z templatu
-      if (a.correct) {
-        // pokud guestova odpoved je spravna
-        average.questions[i].answers[aIndex].votes = average.questions[i]
-          .answers[aIndex].votes
-          ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
-          : 1; // pokud ne tak vytvori
-      }
-    });
-    guests.push({
-      nickname: g.nickname,
-      coins: g.coins,
-      correct,
-      uspesnost,
-    });
-  });
-
-  average.questions.forEach((q, qi) => {
-    q.answers.forEach((a, ai) => {
-      average.questions[qi].answers[ai].votes = average.questions[qi].answers[
-        ai
-      ].votes
-        ? average.questions[qi].answers[ai].votes
-        : 0;
-    });
-  });
-
-  guests.sort((a, b) => {
-    if (a.coins > b.coins) return -1;
-    else return 1;
-  });
-
-  average.questions.forEach((q, qi) => {
-    q.answers.forEach((a, ai) => {
-      average.questions[qi].answers[ai].percent = Math.floor(
-        (a.votes / average.players) * 100 // vypočítá procenta a zaokrouhlí
-      );
-    });
-  });
-
-  io.to(gameID).emit("screen", {
-    is: "EVALUATION",
-    average,
-    guests,
-  });
-}
-
-//////////////////////////////////////////////\\\ HRA \\\////////////////////////////////////////////
-
 io.on("connection", (socket) => {
   socket.on("start", async (gameID) => {
     var game = await Game.findOne({ code: gameID });
     if (game) {
       if (game.controlers.includes(socket.id)) {
-        runCountdown(gameID);
+        question(0, gameID);
       }
+    }
+
+    async function question(index, gameID) {
+      var game = await Game.findOne({ code: gameID });
+
+      await Game.updateOne(
+        { code: gameID },
+        {
+          "state.is": "COUNTDOWN",
+        }
+      );
+
+      function countDown(t) {
+        io.to(gameID).emit("screen", {
+          is: "COUNTDOWN",
+          time: t,
+        });
+      }
+
+      countDown("5");
+      setTimeout(() => {
+        countDown("4");
+      }, 1_000);
+      setTimeout(() => {
+        countDown("3");
+      }, 2_000);
+      setTimeout(() => {
+        countDown("2");
+      }, 3_000);
+      setTimeout(() => {
+        countDown("1");
+      }, 4_000);
+      setTimeout(async () => {
+        game = await Game.findOne({ code: gameID });
+        var temp = await Template.findOne({ id: game.template.id });
+        await Game.updateOne(
+          { code: gameID },
+          {
+            "state.is": "QUESTION",
+            questionID: index,
+          }
+        );
+
+        io.to(gameID).emit("screen", {
+          is: temp.show ? "QUESTION-SHOWED" : "QUESTION-HIDDEN",
+          question: temp.show ? temp.questions[index].question : null,
+          answers: temp.show
+            ? temp.questions[index].answers.map((x) => x.answer)
+            : temp.questions[index].answers.map((x) => ""),
+        });
+
+        io.to(gameID + "control").emit("screen", {
+          is: "QUESTION-SHOWED",
+          question: temp.questions[index].question,
+          answers: temp.questions[index].answers.map((x) => x.answer),
+        });
+
+        setTimeout(async () => {
+          await Game.updateOne(
+            { code: gameID },
+            {
+              "state.is": "CALCULATING",
+            }
+          );
+          game = await Game.findOne({ code: gameID });
+          game.guests.forEach((g, i) => {
+            if (!g.answers[index]) {
+              game.guests[i].answers.push({
+                correct: false,
+                position: null,
+                gainedCoins: 0,
+              });
+            }
+          });
+
+          await Game.updateOne({ code: gameID }, { guests: game.guests });
+
+          if (index + 1 < temp.questions.length) {
+            // BUDE DALŠÍ
+            if (temp.pause) {
+              var sortedGuests = game.guests;
+
+              sortedGuests.sort((a, b) => {
+                if (a.coins > b.coins) return -1;
+                else return 1;
+              });
+
+              io.to(gameID).emit("screen", {
+                is: "PAUSE",
+                guests: sortedGuests.map((x) => ({
+                  nickname: x.nickname,
+                  coins: x.coins,
+                })),
+              });
+              setTimeout(() => {
+                question(index + 1, gameID);
+              }, 10_000);
+            } else {
+              question(index + 1, gameID);
+            }
+          } else {
+            // EVALUATION //
+            game = await Game.findOne({ code: gameID });
+
+            var average = {
+              players: game.guests.length,
+              questions: temp.questions,
+            };
+            var guests = [];
+
+            game.guests.forEach((g, gi) => {
+              g.answers.forEach((a, i) => {
+                var correct = g.answers.filter((a) => a.correct).length; // počet spravnych odpovedi
+                var uspesnost = Math.floor(
+                  (correct / average.questions.length) * 100
+                ); // uspesnost v procentech
+
+                guests.push({
+                  nickname: g.nickname,
+                  coins: g.coins,
+                  correct,
+                  uspesnost,
+                });
+
+                var aIndex = temp.questions[i].answers.indexOf(
+                  temp.questions[i].answers.find((x) => x.correct)
+                ); // zjisti index spravne odpovedi z templatu
+                if (a.correct) {
+                  // pokud guestova odpoved je spravna
+                  average.questions[i].answers[aIndex].votes = average
+                    .questions[i].answers[aIndex].votes
+                    ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
+                    : 1; // pokud ne tak vytvori
+                }
+              });
+            });
+
+            average.questions.forEach((q, qi) => {
+              q.answers.forEach((a, ai) => {
+                average.questions[qi].answers[ai].votes = average.questions[qi]
+                  .answers[ai].votes
+                  ? average.questions[qi].answers[ai].votes
+                  : 0;
+              });
+            });
+
+            guests.sort((a, b) => {
+              if (a.coins > b.coins) return -1;
+              else return 1;
+            });
+
+            average.questions.forEach((q, qi) => {
+              q.answers.forEach((a, ai) => {
+                average.questions[qi].answers[ai].percent = Math.floor(
+                  (a.votes / average.players) * 100 // vypočítá procenta a zaokrouhlí
+                );
+              });
+            });
+
+            io.to(gameID).emit("screen", {
+              is: "EVALUATION",
+              average,
+              guests,
+            });
+          }
+        }, temp.roundTime * 1000);
+      }, 5_000);
     }
   });
   socket.on("answer", async (res) => {
@@ -367,7 +311,6 @@ io.on("connection", (socket) => {
           ) {
             console.log("correct");
             var newPos = game.answerLastPos + 1;
-            console.log("position: ", game.answerLastPos);
             function scaleValue(value, from, to) {
               var scale = (to[1] - to[0]) / (from[1] - from[0]);
               var capped =
@@ -376,7 +319,7 @@ io.on("connection", (socket) => {
             }
             var coins = scaleValue(
               game.answerLastPos,
-              [0, (game.guests.length == 0 ? 1 : game.guests.length) / 2],
+              [0, game.guests.length / 2],
               [1000, 600]
             );
             console.log(coins);
@@ -402,14 +345,6 @@ io.on("connection", (socket) => {
               { "guests.socketID": socket.id },
               { $set: { "guests.$": guest } }
             );
-          }
-          game = await Game.findOne({ code: gameID });
-          if (
-            game.guests.length ==
-            game.guests.filter((x) => x.answers.length == game.questionID + 1)
-              .length
-          ) {
-            pauseOrEvaluateOrContinue(gameID);
           }
         }
       }
@@ -494,8 +429,6 @@ api.get("/start", async (req, res) => {
     author: {
       username: req.session.user,
     },
-    stageID: uuid(),
-    questionID: -1,
   });
   createGame(gameID);
   res.redirect("/" + gameID);
@@ -683,19 +616,12 @@ api.get("/user-games", auth, async (req, res) => {
 });
 
 api.post("/create-template", auth, async (req, res) => {
-  var { questions, name, roundTime, show, pause, pauseTime } = req.body;
+  var { questions, name, roundTime, show, pause } = req.body;
   console.log(req.body);
   if (roundTime <= 0) {
     return res.status(200).send({
       stav: "negative",
     });
-  }
-  if (pause) {
-    if (pauseTime <= 0) {
-      return res.status(200).send({
-        stav: "negative",
-      });
-    }
   }
   name.trim();
   if (!name || name == "" || /^\s+$/.test(name)) {
@@ -768,7 +694,6 @@ api.post("/create-template", auth, async (req, res) => {
     show,
     pause,
     roundTime,
-    pauseTime,
   });
 
   const user = await User.findOne({ username: req.session.user });

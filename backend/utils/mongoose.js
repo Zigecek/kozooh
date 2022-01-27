@@ -16,16 +16,16 @@ module.exports = {
   init: () => {
     const dbOptions = {
       useNewUrlParser: true,
-      useUnifiedTopology: true,
+      //useUnifiedTopology: true,
       autoIndex: true,
-      poolSize: 5,
+      //poolSize: 5,
       connectTimeoutMS: 10000,
       family: 4,
     };
 
     mongoose.connect(process.env.MONGOOSE_KEY, dbOptions);
 
-    mongoose.set("useFindAndModify", false);
+    //mongoose.set("useFindAndModify", false);
     mongoose.Promise = global.Promise;
 
     mongoose.connection.on("connected", () => {

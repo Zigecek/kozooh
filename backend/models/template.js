@@ -6,6 +6,7 @@ const templateSchema = mongoose.Schema({
   used: Number,
   name: String,
   roundTime: Number,
+  pauseTime: Number,
   pause: Boolean,
   show: Boolean,
   questions: Array,

@@ -6,14 +6,13 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
-      crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="../style.css" />
   </head>
 
-  <body class="m-0" style="height: 100vh">
+  <body class="m-0 bg-bg" style="height: 100vh">
     <header
-      class="border-bottom w-100 footer mt-auto py-3 bg-light top-0 start-50"
+      class="border-bottom w-100 footer mt-auto py-3 bg-panel top-0 start-50"
       style="height: 7%"
     >
       <div class="container">
@@ -24,7 +23,7 @@
           <div class="col-4 align-self-center">
             <h3 class="m-0">
               <span id="coins" class="m-0" style="font-size: 3vh"></span>
-              <span class="m-0" style="height: 3vh; width: 3vh">
+              <span id="coinIcon" class="m-0" style="height: 3vh; width: 3vh">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="30px"
@@ -137,46 +136,12 @@
             <ol
               id="question-list"
               class="list-group list-group-numbered m-4 fs-4"
-            >
-              <li
-                class="list-group-item justify-content-between align-items-start"
-              >
-                <h3 class="fs-5 m-3">Otázka bal asf as fas f?</h3>
-                <div class="ms-2 me-auto w-100">
-                  <div>
-                    <ul id="answer-list" class="list-group m-4 fs-4">
-                      <li
-                        class="list-group-item justify-content-between align-items-start"
-                      >
-                        <h3 class="fs-5 m-3">Ano</h3>
-                        <div class="progress">
-                          <div
-                            class="progress-bar bg-danger"
-                            role="progressbar"
-                            style="width: 66%"
-                          ></div>
-                        </div>
-                        <h3 class="fs-4 m-2">10/15</h3>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </li>
-            </ol>
+            ></ol>
 
             <ol
               id="winner-list"
               class="list-group list-group-numbered m-4 fs-4"
-            >
-              <li
-                class="list-group-item d-flex justify-content-between align-items-start"
-              >
-                <div class="ms-2 me-auto">
-                  <div class="fw-bold"></div>
-                </div>
-                <span class="badge bg-primary rounded-pill"></span>
-              </li>
-            </ol>
+            ></ol>
           </div>
         </div>
       </div>
@@ -189,7 +154,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+      $("#screen").html($("#starting").html());
       const gameID = window.location.pathname.substring(1, 7);
+      $("#game-number").text(gameID);
       var queryDict = {};
       var role = "";
       location.search
@@ -245,10 +212,10 @@
             $("#button-list").append(html);
           });
         } else if (screen.is == "QUESTION-HIDDEN") {
+          if (role == "CONTROL") return;
           $("#screen").html($("#question-hidden").html());
-
           var type = ["primary", "danger", "success", "warning"];
-          for (let i = 0; i < screen.answers; i++) {
+          for (let i = 0; i < screen.answers.length; i++) {
             var html = $.parseHTML(`
             <div
           class="d-inline-flex flex-nowrap bd-highlight"
@@ -273,7 +240,63 @@
             $("#position-list").append(html);
           });
         } else if (screen.is == "EVALUATION") {
-          // se poser treba
+          $("#screen").html($("#evaluation").html());
+          screen.average.questions.forEach((q, qi) => {
+            var answers = "";
+            q.answers.forEach((a, ai) => {
+              answers =
+                answers +
+                "\n" +
+                `
+              <li
+                      class="list-group-item justify-content-between align-items-start"
+                    >
+                      <h3 class="fs-5 m-3">${a.answer}</h3>
+                      <div class="progress">
+                        <div
+                          class="progress-bar bg-${
+                            a.correct ? "success" : "danger"
+                          }"
+                          role="progressbar"
+                          style="width: ${a.percent}%"
+                        ></div>
+                      </div>
+                      <h3 class="fs-4 m-2">${a.votes}/${
+                  screen.average.players
+                } (${a.percent}%)</h3>
+                    </li>
+              `;
+            });
+            var html = $.parseHTML(`
+            <li
+              class="list-group-item justify-content-between align-items-start"
+            >
+              <h3 class="fs-5 m-3">${q.question}</h3>
+              <div class="ms-2 me-auto w-100">
+                <div>
+                  <ul class="list-group m-4 fs-4">
+                    ${answers}
+                  </ul>
+                </div>
+              </div>
+            </li>
+            `);
+            $("#question-list").append(html);
+          });
+          screen.guests.forEach((g) => {
+            var html = $.parseHTML(`
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">${g.nickname}</div>
+                <div class="fs-5">${g.correct}/${screen.average.questions.length} (${g.uspesnost}%)</div>
+              </div>
+              <span class="badge bg-primary rounded-pill">${g.coins}</span>
+            </li>
+            `);
+            $("#winner-list").append(html);
+          });
         }
       });
 
@@ -281,7 +304,7 @@
         if (role != "CONTROL") {
           socket.emit("answer", {
             index,
-            gameID
+            gameID,
           });
           $("#screen").html($("#waiting").html());
         }
@@ -297,6 +320,7 @@
         role = x.role;
         if (role == "CONTROL") {
           $("#startGame").removeClass("visually-hidden");
+          $("#coinIcon").html("");
         }
         $("#nickname").text(x.nickname);
         $("#coins").text(x.coins);

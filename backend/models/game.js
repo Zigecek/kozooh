@@ -20,6 +20,7 @@ const gameSchema = mongoose.Schema({
     default: 0,
     type: Number,
   },
+  stageID: String,
 });
 
 module.exports = mongoose.model("Game", gameSchema, "games");
