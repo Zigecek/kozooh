@@ -403,7 +403,7 @@ io.on("connection", (socket) => {
           ) {
             console.log("correct");
             var time = Date.now() - game.questionTime;
-            var maxTime = temp.roundTime;
+            var maxTime = temp.roundTime * 1000;
             console.log("position: ", game.questionTime);
 
             function scaleValue(value, from, to) {
