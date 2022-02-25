@@ -172,7 +172,7 @@ async function question(gameID) {
     {
       "state.is": "QUESTION",
       questionID: game.questionID + 1,
-      answerLastPos: 0,
+      questionTime: Date.now(),
       stageID,
     }
   );
@@ -236,10 +236,12 @@ async function result(gameID) {
   var game = await Game.findOne({ code: gameID });
   game.guests.forEach((g, gi) => {
     var socket = io.sockets.sockets.get(g.socketID);
-    socket.emit("screen", {
-      is: "RESULT",
-      correct: g.answers[g.answers.length - 1]?.correct,
-    });
+    if (socket) {
+      socket.emit("screen", {
+        is: "RESULT",
+        correct: g.answers[g.answers.length - 1]?.correct,
+      });
+    }
   });
   setTimeout(async () => {
     var game = await Game.findOne({ code: gameID });
@@ -400,25 +402,22 @@ io.on("connection", (socket) => {
             temp.questions[game.questionID]?.answers[index]?.correct == true
           ) {
             console.log("correct");
-            var newPos = game.answerLastPos + 1;
-            console.log("position: ", game.answerLastPos);
+            var time = Date.now() - game.questionTime;
+            var maxTime = temp.roundTime;
+            console.log("position: ", game.questionTime);
+
             function scaleValue(value, from, to) {
               var scale = (to[1] - to[0]) / (from[1] - from[0]);
               var capped =
                 Math.min(from[1], Math.max(from[0], value)) - from[0];
               return ~~(capped * scale + to[0]);
             }
-            var coins = scaleValue(
-              game.answerLastPos,
-              [0, (game.guests.length == 0 ? 1 : game.guests.length) / 2],
-              [1000, 600]
-            );
+            var coins = scaleValue(time, [0, maxTime], [1000, 600]);
             console.log(coins);
 
             guest.answers.push({
               correct: true,
               index,
-              position: newPos,
               gainedCoins: coins,
             });
             guest.coins += coins;
@@ -426,12 +425,10 @@ io.on("connection", (socket) => {
               { "guests.socketID": socket.id },
               { $set: { "guests.$": guest } }
             );
-            await Game.updateOne({ code: gameID }, { answerLastPos: newPos });
           } else {
             guest.answers.push({
               correct: false,
               index,
-              position: null,
               gainedCoins: 0,
             });
             await Game.updateOne(

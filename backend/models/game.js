@@ -16,7 +16,7 @@ const gameSchema = mongoose.Schema({
     default: null,
     type: Number,
   },
-  answerLastPos: {
+  questionTime: {
     default: 0,
     type: Number,
   },
