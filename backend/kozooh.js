@@ -21,7 +21,7 @@ const nodemailer = require("nodemailer");
 const morgan = require("morgan");
 const randomstring = require("randomstring");
 const path = require("path");
-const ExcelJS = require('exceljs');
+const ExcelJS = require("exceljs");
 
 var store = new MongoDBStore({
   uri: process.env.MONGOOSE_KEY,
