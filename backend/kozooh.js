@@ -22,6 +22,7 @@ const morgan = require("morgan");
 const randomstring = require("randomstring");
 const path = require("path");
 const ExcelJS = require("exceljs");
+const fs = require("fs");
 
 var store = new MongoDBStore({
   uri: process.env.MONGOOSE_KEY,
@@ -421,9 +422,10 @@ async function xlsx(average, guests, gameID) {
     var quC
   })*/
   try {
-    await workbook.xlsx.writeFile(
+    var stream = fs.createWriteStream(
       path.join(__dirname, "./results", gameID + ".xlsx")
     );
+    await workbook.xlsx.write(stream);
   } catch (error) {
     console.error(error);
   }
