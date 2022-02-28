@@ -372,7 +372,7 @@ async function evaluate(gameID) {
     });
   });
 
-  await xlsx(average, guests);
+  await xlsx(average, guests, gameID);
 
   io.to(gameID).emit("screen", {
     is: "EVALUATION",
@@ -381,7 +381,7 @@ async function evaluate(gameID) {
   });
 }
 
-async function xlsx(average, guests) {
+async function xlsx(average, guests, gameID) {
   var workbook = new ExcelJS.Workbook();
 
   /// PLAYERS - sheet
