@@ -371,11 +371,61 @@ async function evaluate(gameID) {
     });
   });
 
+  await xlsx(average, guests);
+
   io.to(gameID).emit("screen", {
     is: "EVALUATION",
     average,
     guests,
   });
+}
+
+async function xlsx(average, guests) {
+  var workbook = new ExcelJS.Workbook();
+
+  /// PLAYERS - sheet
+  var pSheet = workbook.addWorksheet("Players");
+
+  pSheet.columns = [
+    { header: "Přezdívka", key: "nickname", width: 15 },
+    { header: "Správné otázky", key: "questions", width: 15 },
+    { header: "Body", key: "coins", width: 15 },
+    { header: "Úspěšnost", key: "percent", width: 15 },
+  ];
+
+  var nColVals = guests.map((x) => x.nickname);
+  var qColVals = guests.map((x) => x.correct + "/" + average.questions.length);
+  var cColVals = guests.map((x) => x.coins);
+  var pColVals = guests.map((x) => x.uspesnost);
+
+  var nCol = pSheet.getColumn("nickname");
+  var qCol = pSheet.getColumn("questions");
+  var cCol = pSheet.getColumn("coins");
+  var pCol = pSheet.getColumn("percent");
+
+  nCol.values = nColVals;
+  qCol.values = qColVals;
+  cCol.values = cColVals;
+  pCol.values = pColVals;
+
+  nCol.alignment = { vertical: "middle", horizontal: "center" };
+  qCol.alignment = { vertical: "middle", horizontal: "center" };
+  cCol.alignment = { vertical: "middle", horizontal: "center" };
+  pCol.alignment = { vertical: "middle", horizontal: "center" };
+
+  /// Questions - sheet
+  var qSheet = workbook.addWorksheet("Questions");
+  /*
+  average.questions.forEach(q => {
+    var quC
+  })*/
+  try {
+    await workbook.xlsx.writeFile(
+      path.join(__dirname, "./results", gameID + ".xlsx")
+    );
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 //////////////////////////////////////////////\\\ HRA \\\////////////////////////////////////////////
@@ -835,6 +885,36 @@ api.get("/ver", async (req, res) => {
   } catch (err) {
     return res.status(401).send("Invalid Token");
   }
+});
+
+/////////////////////////////////////////////////////////////////////////// FILE RESULTS
+
+var resR = express.Router({ mergeParams: true });
+app.use("/results", resR);
+
+resR.get(/\/[0-9]{6}.xlsx/, (req, res) => {
+  fs.access(
+    path.join(__dirname, "/results", path.basename(req.path)),
+    fs.constants.F_OK,
+    (err) => {
+      if (!err) {
+        res.sendFile(
+          path.join(__dirname, "/results", path.basename(req.path)),
+          {
+            headers: {
+              "content-type":
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+          },
+          (err) => {
+            return res.sendStatus(500);
+          }
+        );
+      } else {
+        return res.sendStatus(404);
+      }
+    }
+  );
 });
 
 console.log("Kozooh - " + port);

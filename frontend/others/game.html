@@ -144,6 +144,7 @@
             ></ol>
           </div>
         </div>
+        <a href="#" id="xlsx" class="text-center">Stáhnout výsledky v .xlsx</a>
       </div>
       <div id="result">
         <div style="width: 100%; height: 100%">
@@ -254,6 +255,9 @@
           </li>`);
             $("#position-list").append(html);
           });
+          if (role != "CONTROL") {
+            $("#coins").text(screen.guests.find(x => x.nickname == $("#nickname").text()));
+          }
         } else if (screen.is == "EVALUATION") {
           $("#screen").html($("#evaluation").html());
           screen.average.questions.forEach((q, qi) => {
@@ -312,6 +316,10 @@
             `);
             $("#winner-list").append(html);
           });
+          $("#xlsx").attr("href", window.location.hostname + "/results/" + gameID + ".xlsx");
+          if (role != "CONTROL") {
+            $("#coins").text(screen.guests.find(x => x.nickname == $("#nickname").text()));
+          }
         } else if (screen.is == "RESULT") {
           $("#screen").html($("#result").html());
           $("#resIcon").attr(
@@ -343,10 +351,13 @@
         role = x.role;
         if (role == "CONTROL") {
           $("#startGame").removeClass("visually-hidden");
-          $("#coinIcon").html("");
-        }
-        $("#nickname").text(x.nickname);
+          $("#nickname").remove();
+          $("#coins").remove();
+        } else {
+          $("#nickname").text(x.nickname);
         $("#coins").text(x.coins);
+        }
+        
       });
 
       function alertos(time, type, text, fadeouttime) {
