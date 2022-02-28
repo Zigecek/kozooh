@@ -1,4 +1,5 @@
 {
+  "version": "0.0.1",
   "scripts": {
     "i": "npm i body-parser@latest connect-mongodb-session@latest dotenv@latest express@latest express-session@latest find-config@latest jsonwebtoken@latest mongoose@latest morgan@latest nodemailer@latest randomstring@latest serve-static@latest socket.io@latest uuid@latest",
     "uni": "npm uninstall body-parser connect-mongodb-session dotenv express express-session find-config jsonwebtoken mongoose morgan nodemailer randomstring serve-static socket.io uuid",
