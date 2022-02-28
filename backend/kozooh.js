@@ -54,7 +54,7 @@ let transporter = nodemailer.createTransport({
 });
 
 store.on("error", function (error) {
-  console.log(error);
+  console.error(error);
 });
 
 var auth = function (req, res, next) {
@@ -337,12 +337,12 @@ async function evaluate(gameID) {
       if (a.correct) {
         // pokud guestova odpoved je spravna
         average.questions[i].answers[aIndex].votes = average.questions[i]
-          .answers[aIndex].votes
+          .answers[aIndex]?.votes
           ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
       } else {
         average.questions[i].answers[a.index].votes = average.questions[i]
-          .answers[a.index].votes
+          .answers[a.index]?.votes
           ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
       }
@@ -448,16 +448,11 @@ io.on("connection", (socket) => {
       var guest = game.guests.find((x) => x.socketID == socket.id);
       if (guest) {
         if (game.state.is == "QUESTION") {
-          console.log("question");
           if (
             temp.questions[game.questionID]?.answers[index]?.correct == true
           ) {
-            console.log("correct");
             var time = Date.now() - game.questionTime;
             var maxTime = temp.roundTime * 1000;
-            console.log(time);
-            console.log(maxTime);
-            console.log("position: ", game.questionTime);
 
             function scaleValue(value, from, to) {
               var scale = (to[1] - to[0]) / (from[1] - from[0]);
@@ -508,18 +503,13 @@ api.post("/game-auth", async (req, res) => {
   if (!/^\d{6}$/.test(gameID)) return;
   var game = await Game.findOne({ code: gameID });
   if (game) {
-    console.log("game");
     if (req.session?.user == game.author.username) {
-      console.log("controler");
       await Game.findOneAndUpdate(
         { code: gameID },
         { $push: { controlers: sid } }
       );
-      console.log("databaze");
       var socket = io.sockets.sockets.get(sid);
-      console.log("socket");
       if (socket) {
-        console.log("ano");
         socket.emit("auth", {
           role: "CONTROL",
         });
@@ -527,19 +517,13 @@ api.post("/game-auth", async (req, res) => {
         socket.join(gameID + "control");
       }
     } else {
-      console.log("guest");
       var guest = game.guests.find((g) => g.guestID == req.session.guestID);
       if (guest) {
-        console.log("guest nalezen");
         await Game.updateOne({ code: gameID }, { $pull: { guests: guest } });
-        console.log("pull");
         guest.socketID = sid;
         await Game.updateOne({ code: gameID }, { $push: { guests: guest } });
-        console.log("push");
         var socket = io.sockets.sockets.get(sid);
-        console.log("socket");
         if (socket) {
-          console.log("ano");
           socket.emit("auth", {
             role: "GUEST",
             nickname: guest.nickname,
@@ -555,7 +539,6 @@ api.post("/game-auth", async (req, res) => {
           });
         }
       } else {
-        console.log("guesnt nen");
         io.sockets.sockets.get(sid)?.disconnect(true);
       }
     }
@@ -615,11 +598,8 @@ app.post("/join", async (req, res) => {
     });
   }
   var game = await Game.findOne({ code: gameID });
-  console.log("ano");
   if (game) {
-    console.log(game);
     if (game.state.is == "STARTING") {
-      console.log("STARTING");
       var id = uuid();
       await Game.updateOne(
         { code: gameID },
@@ -770,7 +750,6 @@ api.get("/user-games", auth, async (req, res) => {
 
 api.post("/create-template", auth, async (req, res) => {
   var { questions, name, roundTime, show, pause, pauseTime } = req.body;
-  console.log(req.body);
   if (roundTime <= 0) {
     return res.status(200).send({
       stav: "negative",

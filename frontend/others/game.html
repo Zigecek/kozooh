@@ -88,21 +88,21 @@
         ></div>
       </div>
       <div id="countdown">
-        <div class="" style="width: 100%; height: 100%">
-          <div
-            style="
-              width: 20%;
-              height: 20%;
-              margin: auto;
-              margin: 40%;
-              position: absolute;
-            "
-          >
-            <h1 id="countdown-time" class="text-center" style="font-size: 5rem">
-              5
-            </h1>
-          </div>
-        </div>
+        <h1
+          id="countdown-time"
+          class="text-center"
+          style="
+            font-size: 5rem;
+            height: 16%;
+            width: 16%;
+            top: 42%;
+            left: 42%;
+            position: absolute;
+            margin: 0;
+          "
+        >
+          5
+        </h1>
       </div>
       <div id="pause">
         <ol
@@ -114,10 +114,11 @@
         <div style="width: 100%; height: 100%">
           <div
             style="
-              width: 20%;
-              height: 20%;
-              margin: auto;
-              margin: 40%;
+              top: 40vh;
+              left: calc((100vw - 20vh) / 2);
+              width: 20vh;
+              height: 20vh;
+              margin: 0;
               position: absolute;
             "
           >
@@ -151,13 +152,15 @@
           <div
             class="align-self-center"
             style="
+              top: 40vh;
+              left: calc((100vw - 20vh) / 2);
+              margin: 0;
               width: 20vh;
               height: 20vh;
-              margin: 35vh 39vh;
               position: absolute;
             "
           >
-            <img id="resIcon" style="width: 20vh; height: 20vh" />
+            <img id="resIcon" style="width: 100%; height: 100%" />
           </div>
         </div>
       </div>
@@ -170,7 +173,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-      $("#screen").html($("#starting").html());
+      //$("#screen").html($("#starting").html());
       const gameID = window.location.pathname.substring(1, 7);
       $("#game-number").text(gameID);
       var queryDict = {};
@@ -256,7 +259,10 @@
             $("#position-list").append(html);
           });
           if (role != "CONTROL") {
-            $("#coins").text(screen.guests.find(x => x.nickname == $("#nickname").text()).coins);
+            $("#coins").text(
+              screen.guests.find((x) => x.nickname == $("#nickname").text())
+                .coins
+            );
           }
         } else if (screen.is == "EVALUATION") {
           $("#screen").html($("#evaluation").html());
@@ -316,9 +322,14 @@
             `);
             $("#winner-list").append(html);
           });
-          $("#xlsx").attr("href", window.location.hostname + "/results/" + gameID + ".xlsx");
+          $("#xlsx").attr(
+            "href",
+            window.location.hostname + "/results/" + gameID + ".xlsx"
+          );
           if (role != "CONTROL") {
-            $("#coins").text(screen.guests.find(x => x.nickname == $("#nickname").text()));
+            $("#coins").text(
+              screen.guests.find((x) => x.nickname == $("#nickname").text())
+            );
           }
         } else if (screen.is == "RESULT") {
           $("#screen").html($("#result").html());
@@ -355,9 +366,8 @@
           $("#coins").remove();
         } else {
           $("#nickname").text(x.nickname);
-        $("#coins").text(x.coins);
+          $("#coins").text(x.coins);
         }
-        
       });
 
       function alertos(time, type, text, fadeouttime) {
