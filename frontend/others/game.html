@@ -256,7 +256,7 @@
             $("#position-list").append(html);
           });
           if (role != "CONTROL") {
-            $("#coins").text(screen.guests.find(x => x.nickname == $("#nickname").text()));
+            $("#coins").text(screen.guests.find(x => x.nickname == $("#nickname").text()).coins);
           }
         } else if (screen.is == "EVALUATION") {
           $("#screen").html($("#evaluation").html());
