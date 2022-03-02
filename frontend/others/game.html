@@ -62,6 +62,7 @@
     <div id="screen" class="m-0" style="height: 93%"></div>
 
     <div style="display: none">
+      <audio id="audioplayer"></audio>
       <div id="starting">
         <h1 id="game-number" class="fs-0 text-center m-3"></h1>
         <div
@@ -207,11 +208,11 @@
           $("#game-number").text(gameID);
           screen.guests.forEach((g) => {
             var html = $.parseHTML(`
-          <div
-            class="m-3 border border-secondary rounded-1 d-inline-flex flex-nowrap bd-highlight"
-          >
-            <h3 class="fs-4 bg-light px-4 py-1 m-0">${g.nickname}</h3>
-          </div>`);
+                <div
+                  class="m-3 border border-secondary rounded-1 d-inline-flex flex-nowrap bd-highlight"
+                >
+                  <h3 class="fs-4 bg-light px-4 py-1 m-0">${g.nickname}</h3>
+                </div>`);
 
             $("#player-list").append(html);
           });
@@ -224,40 +225,52 @@
           var type = ["primary", "danger", "success", "warning"];
           screen.answers.forEach((a, i) => {
             var html = $.parseHTML(`
-            <div
-          class="d-inline-flex flex-nowrap bd-highlight"
-          style="width: 46%; height: 46%; margin: 1.5%"
-        >
-          <button onclick="questionClick(${i})" class="btn btn-${type[i]} btn-lg w-100 h-100">${a}</button>
-        </div>`);
+                  <div
+                class="d-inline-flex flex-nowrap bd-highlight"
+                style="width: 46%; height: 46%; margin: 1.5%"
+              >
+                <button onclick="questionClick(${i})" class="btn btn-${type[i]} btn-lg w-100 h-100">${a}</button>
+              </div>`);
             $("#button-list").append(html);
           });
+          var audio = document.getElementById("audioplayer");
+
+          function getRndInteger(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+          }
+
+          var url = "./audio/" + getRndInteger(0, 5) + ".mp3";
+
+          audio.src = url;
+          audio.loop = true;
+          audio.load();
+          audio.play();
         } else if (screen.is == "QUESTION-HIDDEN") {
           if (role == "CONTROL") return;
           $("#screen").html($("#question-hidden").html());
           var type = ["primary", "danger", "success", "warning"];
           for (let i = 0; i < screen.answers.length; i++) {
             var html = $.parseHTML(`
-            <div
-          class="d-inline-flex flex-nowrap bd-highlight"
-          style="width: 46%; height: 46%; margin: 1.5%"
-        >
-          <button onclick="questionClick(${i})" class="btn btn-${type[i]} btn-lg w-100 h-100"></button>
-        </div>`);
+                  <div
+                class="d-inline-flex flex-nowrap bd-highlight"
+                style="width: 46%; height: 46%; margin: 1.5%"
+              >
+                <button onclick="questionClick(${i})" class="btn btn-${type[i]} btn-lg w-100 h-100"></button>
+              </div>`);
             $("#button-list").append(html);
           }
         } else if (screen.is == "PAUSE") {
           $("#screen").html($("#pause").html());
           screen.guests.forEach((g, i) => {
             var html = $.parseHTML(`
-            <li
-            class="list-group-item d-flex justify-content-between align-items-start"
-          >
-            <div class="ms-2 me-auto">
-              <div class="fw-bold">${g.nickname}</div>
-            </div>
-            <span class="badge bg-primary rounded-pill">${g.coins}</span>
-          </li>`);
+                  <li
+                  class="list-group-item d-flex justify-content-between align-items-start"
+                >
+                  <div class="ms-2 me-auto">
+                    <div class="fw-bold">${g.nickname}</div>
+                  </div>
+                  <span class="badge bg-primary rounded-pill">${g.coins}</span>
+                </li>`);
             $("#position-list").append(html);
           });
           if (role != "CONTROL") {
@@ -275,53 +288,53 @@
                 answers +
                 "\n" +
                 `
-              <li
-                      class="list-group-item justify-content-between align-items-start"
-                    >
-                      <h3 class="fs-5 m-3">${a.answer}</h3>
-                      <div class="progress">
-                        <div
-                          class="progress-bar bg-${
-                            a.correct ? "success" : "danger"
-                          }"
-                          role="progressbar"
-                          style="width: ${a.percent}%"
-                        ></div>
-                      </div>
-                      <h3 class="fs-4 m-2">${a.votes}/${
+                    <li
+                            class="list-group-item justify-content-between align-items-start"
+                          >
+                            <h3 class="fs-5 m-3">${a.answer}</h3>
+                            <div class="progress">
+                              <div
+                                class="progress-bar bg-${
+                                  a.correct ? "success" : "danger"
+                                }"
+                                role="progressbar"
+                                style="width: ${a.percent}%"
+                              ></div>
+                            </div>
+                            <h3 class="fs-4 m-2">${a.votes}/${
                   screen.average.players
                 } (${a.percent}%)</h3>
-                    </li>
-              `;
+                          </li>
+                    `;
             });
             var html = $.parseHTML(`
-            <li
-              class="list-group-item justify-content-between align-items-start"
-            >
-              <h3 class="fs-5 m-3">${q.question}</h3>
-              <div class="ms-2 me-auto w-100">
-                <div>
-                  <ul class="list-group m-4 fs-4">
-                    ${answers}
-                  </ul>
-                </div>
-              </div>
-            </li>
-            `);
+                  <li
+                    class="list-group-item justify-content-between align-items-start"
+                  >
+                    <h3 class="fs-5 m-3">${q.question}</h3>
+                    <div class="ms-2 me-auto w-100">
+                      <div>
+                        <ul class="list-group m-4 fs-4">
+                          ${answers}
+                        </ul>
+                      </div>
+                    </div>
+                  </li>
+                  `);
             $("#question-list").append(html);
           });
           screen.guests.forEach((g) => {
             var html = $.parseHTML(`
-            <li
-              class="list-group-item d-flex justify-content-between align-items-start"
-            >
-              <div class="ms-2 me-auto">
-                <div class="fw-bold">${g.nickname}</div>
-                <div class="fs-5">${g.correct}/${screen.average.questions.length} (${g.uspesnost}%)</div>
-              </div>
-              <span class="badge bg-primary rounded-pill">${g.coins}</span>
-            </li>
-            `);
+                  <li
+                    class="list-group-item d-flex justify-content-between align-items-start"
+                  >
+                    <div class="ms-2 me-auto">
+                      <div class="fw-bold">${g.nickname}</div>
+                      <div class="fs-5">${g.correct}/${screen.average.questions.length} (${g.uspesnost}%)</div>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">${g.coins}</span>
+                  </li>
+                  `);
             $("#winner-list").append(html);
           });
           $("#xlsx").attr(

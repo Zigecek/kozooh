@@ -410,6 +410,11 @@ async function xlsx(average, guests, gameID) {
   var cCol = pSheet.getColumn("coins");
   var pCol = pSheet.getColumn("percent");
 
+  nCol.header = "Přezdívka";
+  qCol.header = "Správné otázky";
+  cCol.header = "Body";
+  pCol.header = "Úspěšnost";
+
   nCol.values = nColVals;
   qCol.values = qColVals;
   cCol.values = cColVals;
