@@ -894,6 +894,7 @@ resR.get(/\/[0-9]{6}.xlsx/, (req, res) => {
     path.join(__dirname, "/results", path.basename(req.path)),
     fs.constants.F_OK,
     (err) => {
+      console.log(err);
       if (!err) {
         res.sendFile(
           path.join(__dirname, "/results", path.basename(req.path)),
