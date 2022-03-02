@@ -9,3 +9,7 @@
 .bg-white {
   background-color: rgb(255, 255, 255);
 }
+
+.opacity0 {
+  opacity: 0;
+}

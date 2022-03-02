@@ -236,6 +236,7 @@ async function result(gameID) {
   );
 
   var game = await Game.findOne({ code: gameID });
+  var temp = await Template.findOne({ id: game.template.id });
   game.guests.forEach((g, gi) => {
     var socket = io.sockets.sockets.get(g.socketID);
     if (socket) {
@@ -244,6 +245,12 @@ async function result(gameID) {
         correct: g.answers[g.answers.length - 1]?.correct,
       });
     }
+  });
+  io.to(gameID + "control").emit("screen", {
+    is: "RESULT",
+    correct: temp.questions[game.questionID].answers.indexOf(
+      temp.questions[game.questionID].answers.find((x) => x.correct)
+    ),
   });
   setTimeout(async () => {
     var game = await Game.findOne({ code: gameID });
@@ -433,7 +440,7 @@ async function xlsx(average, guests, gameID) {
     type: "pattern",
     pattern: "solid",
     bgColor: {
-      argb: "D9D9D9FF",
+      rgb: "D9D9D9",
     },
   };
 

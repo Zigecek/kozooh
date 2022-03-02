@@ -23,25 +23,27 @@
           <div class="col-4 align-self-center">
             <h3 class="m-0">
               <span id="coins" class="m-0" style="font-size: 3vh"></span>
-              <span id="coinIcon" class="m-0" style="height: 3vh; width: 3vh">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="30px"
-                  height="30px"
-                  fill="currentColor"
-                  class="bi bi-coin m-0"
-                  viewBox="0 0 30 30"
-                >
-                  <path
-                    d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"
-                  />
-                  <path
-                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
-                  />
-                  <path
-                    d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"
-                  />
-                </svg>
+              <span id="coinIcon">
+                <div class="m-0" style="height: 5vh; width: 5vh">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="100%"
+                    height="100%"
+                    fill="currentColor"
+                    class="bi bi-coin m-0"
+                    viewBox="0 0 30 30"
+                  >
+                    <path
+                      d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"
+                    />
+                    <path
+                      d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
+                    />
+                    <path
+                      d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"
+                    />
+                  </svg>
+                </div>
               </span>
             </h3>
           </div>
@@ -65,6 +67,7 @@
     <div style="display: none">
       <div id="starting">
         <h1 id="game-number" class="fs-0 text-center m-3"></h1>
+        <h2 class="fs-4 text-center m-1">kozooh.kozohorsky.xyz</h2>
         <div
           id="player-list"
           class="mt-2 mb-2"
@@ -225,7 +228,7 @@
           var type = ["primary", "danger", "success", "warning"];
           screen.answers.forEach((a, i) => {
             var html = $.parseHTML(`
-                  <div
+                  <div id="aBtn${i}"
                 class="d-inline-flex flex-nowrap bd-highlight"
                 style="width: 46%; height: 46%; margin: 1.5%"
               >
@@ -354,13 +357,23 @@
             );
           }
         } else if (screen.is == "RESULT") {
-          $("#screen").html($("#result").html());
-          $("#resIcon").attr(
-            "src",
-            screen.correct
-              ? "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Eo_circle_light-green_checkmark.svg/2048px-Eo_circle_light-green_checkmark.svg.png"
-              : "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Cross_red_circle.svg/1200px-Cross_red_circle.svg.png"
-          );
+          if (role != "CONTROL") {
+            $("#screen").html($("#result").html());
+            $("#resIcon").attr(
+              "src",
+              screen.correct
+                ? "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Eo_circle_light-green_checkmark.svg/2048px-Eo_circle_light-green_checkmark.svg.png"
+                : "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Cross_red_circle.svg/1200px-Cross_red_circle.svg.png"
+            );
+          } else {
+            for (let i = 0; i <= 3; i++) {
+              if (screen.correct != i) {
+                $("#aBtn" + i)
+                  .attr("disabled", true)
+                  .addClass("opacity0");
+              }
+            }
+          }
         }
       });
 
@@ -386,6 +399,7 @@
           $("#startGame").removeClass("visually-hidden");
           $("#nickname").remove();
           $("#coins").remove();
+          $("#coinIcon").remove();
         } else {
           $("#nickname").text(x.nickname);
           $("#coins").text(x.coins);
