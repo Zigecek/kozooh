@@ -60,9 +60,9 @@
     </button>
 
     <div id="screen" class="m-0" style="height: 93%"></div>
+    <audio id="audioplayer" loop></audio>
 
     <div style="display: none">
-      <audio id="audioplayer"></audio>
       <div id="starting">
         <h1 id="game-number" class="fs-0 text-center m-3"></h1>
         <div
@@ -233,9 +233,8 @@
               </div>`);
             $("#button-list").append(html);
           });
-          if ((role = "CONTROL")) {
+          if (role == "CONTROL") {
             var audio = document.getElementById("audioplayer");
-
             function getRndInteger(min, max) {
               return Math.floor(Math.random() * (max - min + 1)) + min;
             }
@@ -243,11 +242,11 @@
             var url = "./others/audio/" + getRndInteger(0, 5) + ".mp3";
 
             audio.src = url;
-            audio.loop = true;
-            audio.load();
+
             audio.oncanplay = function () {
               audio.play();
             };
+            audio.load();
           }
         } else if (screen.is == "QUESTION-HIDDEN") {
           if (role == "CONTROL") return;
@@ -264,6 +263,7 @@
             $("#button-list").append(html);
           }
         } else if (screen.is == "PAUSE") {
+          document.getElementById("audioplayer").pause();
           $("#screen").html($("#pause").html());
           screen.guests.forEach((g, i) => {
             var html = $.parseHTML(`
@@ -284,6 +284,7 @@
             );
           }
         } else if (screen.is == "EVALUATION") {
+          document.getElementById("audioplayer").pause();
           $("#screen").html($("#evaluation").html());
           screen.average.questions.forEach((q, qi) => {
             var answers = "";
