@@ -886,10 +886,7 @@ api.get("/ver", async (req, res) => {
 
 /////////////////////////////////////////////////////////////////////////// FILE RESULTS
 
-var resR = express.Router({ mergeParams: true });
-app.use("/results", resR);
-
-resR.get(/\/[0-9]{6}.xlsx/, (req, res) => {
+app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
   console.logs('1');
   fs.access(
     path.join(__dirname, "/results", path.basename(req.path)),
