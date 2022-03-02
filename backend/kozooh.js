@@ -405,20 +405,25 @@ async function xlsx(average, guests, gameID) {
   var cColVals = guests.map((x) => x.coins);
   var pColVals = guests.map((x) => x.uspesnost);
 
+  nColVals.splice(0, 0, " ");
+  qColVals.splice(0, 0, " ");
+  cColVals.splice(0, 0, " ");
+  pColVals.splice(0, 0, " ");
+
   var nCol = pSheet.getColumn("nickname");
   var qCol = pSheet.getColumn("questions");
   var cCol = pSheet.getColumn("coins");
   var pCol = pSheet.getColumn("percent");
 
-  nCol.header = "Přezdívka";
-  qCol.header = "Správné otázky";
-  cCol.header = "Body";
-  pCol.header = "Úspěšnost";
-
   nCol.values = nColVals;
   qCol.values = qColVals;
   cCol.values = cColVals;
   pCol.values = pColVals;
+
+  nCol.header = "Přezdívka";
+  qCol.header = "Správné otázky";
+  cCol.header = "Body";
+  pCol.header = "Úspěšnost";
 
   nCol.alignment = { vertical: "middle", horizontal: "center" };
   qCol.alignment = { vertical: "middle", horizontal: "center" };
