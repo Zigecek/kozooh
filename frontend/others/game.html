@@ -233,18 +233,20 @@
               </div>`);
             $("#button-list").append(html);
           });
-          var audio = document.getElementById("audioplayer");
+          if ((role = "CONTROL")) {
+            var audio = document.getElementById("audioplayer");
 
-          function getRndInteger(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+            function getRndInteger(min, max) {
+              return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            var url = "./audio/" + getRndInteger(0, 5) + ".mp3";
+
+            audio.src = url;
+            audio.loop = true;
+            audio.load();
+            audio.play();
           }
-
-          var url = "./audio/" + getRndInteger(0, 5) + ".mp3";
-
-          audio.src = url;
-          audio.loop = true;
-          audio.load();
-          audio.play();
         } else if (screen.is == "QUESTION-HIDDEN") {
           if (role == "CONTROL") return;
           $("#screen").html($("#question-hidden").html());
