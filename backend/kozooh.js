@@ -331,7 +331,7 @@ async function evaluate(gameID) {
       uspesnost,
     });
 
-    g.answers.forEach((a, i) => {
+    g.answers.forEach((a, i) => {/*
       var aIndex = temp.questions[i].answers.indexOf(
         temp.questions[i].answers.find((x) => x.correct)
       ); // zjisti index spravne odpovedi z templatu
@@ -341,12 +341,12 @@ async function evaluate(gameID) {
           .answers[aIndex]?.votes
           ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
-      } else {
+      } else {*/
         average.questions[i].answers[a.index].votes = average.questions[i]
           .answers[a.index]?.votes
           ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
-      }
+      //}
     });
   });
 
