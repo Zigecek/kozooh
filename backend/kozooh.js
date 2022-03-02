@@ -890,12 +890,15 @@ var resR = express.Router({ mergeParams: true });
 app.use("/results", resR);
 
 resR.get(/\/[0-9]{6}.xlsx/, (req, res) => {
+  console.logs('1');
   fs.access(
     path.join(__dirname, "/results", path.basename(req.path)),
     fs.constants.F_OK,
     (err) => {
-      console.log(err);
+      console.logs('2');
+      console.error(err);
       if (!err) {
+        console.logs('3');
         res.sendFile(
           path.join(__dirname, "/results", path.basename(req.path)),
           {
