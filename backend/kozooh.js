@@ -321,6 +321,8 @@ async function evaluate(gameID) {
   var guests = [];
 
   game.guests.forEach((g, gi) => {
+    console.log(g);
+    console.log(average.questions);
     var correct = g.answers.filter((a) => a.correct).length; // počet spravnych odpovedi
     var uspesnost = Math.floor((correct / average.questions.length) * 100); // uspesnost v procentech
 
@@ -331,7 +333,8 @@ async function evaluate(gameID) {
       uspesnost,
     });
 
-    g.answers.forEach((a, i) => {/*
+    g.answers.forEach((a, i) => {
+      /*
       var aIndex = temp.questions[i].answers.indexOf(
         temp.questions[i].answers.find((x) => x.correct)
       ); // zjisti index spravne odpovedi z templatu
@@ -342,10 +345,10 @@ async function evaluate(gameID) {
           ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
       } else {*/
-        average.questions[i].answers[a.index].votes = average.questions[i]
-          .answers[a.index]?.votes
-          ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
-          : 1; // pokud ne tak vytvori
+      average.questions[i].answers[a.index].votes = average.questions[i]
+        .answers[a.index]?.votes
+        ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
+        : 1; // pokud ne tak vytvori
       //}
     });
   });
@@ -470,6 +473,11 @@ io.on("connection", (socket) => {
               index,
               gainedCoins: coins,
             });
+            console.log({
+              correct: true,
+              index,
+              gainedCoins: coins,
+            });
             guest.coins += coins;
             await Game.updateOne(
               { "guests.socketID": socket.id },
@@ -477,6 +485,11 @@ io.on("connection", (socket) => {
             );
           } else {
             guest.answers.push({
+              correct: false,
+              index,
+              gainedCoins: 0,
+            });
+            console.log({
               correct: false,
               index,
               gainedCoins: 0,
