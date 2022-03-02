@@ -201,7 +201,7 @@
           });
       });
 
-      socket.on("screen", (screen) => {
+      socket.on("screen", async (screen) => {
         console.log(screen);
         if (screen.is == "STARTING") {
           $("#screen").html($("#starting").html());
@@ -240,12 +240,14 @@
               return Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
-            var url = "./audio/" + getRndInteger(0, 5) + ".mp3";
+            var url = "./others/audio/" + getRndInteger(0, 5) + ".mp3";
 
             audio.src = url;
             audio.loop = true;
             audio.load();
-            audio.play();
+            audio.oncanplay = function () {
+              audio.play();
+            };
           }
         } else if (screen.is == "QUESTION-HIDDEN") {
           if (role == "CONTROL") return;
