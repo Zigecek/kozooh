@@ -341,7 +341,6 @@ async function evaluate(gameID) {
     });
 
     g.answers.forEach((a, i) => {
-      /*
       var aIndex = temp.questions[i].answers.indexOf(
         temp.questions[i].answers.find((x) => x.correct)
       ); // zjisti index spravne odpovedi z templatu
@@ -351,14 +350,15 @@ async function evaluate(gameID) {
           .answers[aIndex]?.votes
           ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
-      } else {*/
-      if (a.index) {
-        average.questions[i].answers[a.index].votes = average.questions[i]
-          .answers[a.index]?.votes
-          ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
-          : 1; // pokud ne tak vytvori
+      } else {
+        if (a.index) {
+          // pokud vůbec odpověděl
+          average.questions[i].answers[a.index].votes = average.questions[i]
+            .answers[a.index]?.votes
+            ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
+            : 1; // pokud ne tak vytvori
+        }
       }
-      //}
     });
   });
 
@@ -432,15 +432,46 @@ async function xlsx(average, guests, gameID) {
   cCol.header = "Body";
   pCol.header = "Úspěšnost";
 
-  var headery = pSheet.getRow(1);
-  headery.font = {
+  //var headery = pSheet.getRow(1);
+
+  nCol.header.font = {
     bold: true,
   };
-  headery.fill = {
+  nCol.header.fill = {
     type: "pattern",
     pattern: "solid",
     bgColor: {
-      rgb: "D9D9D9",
+      argb: "D9D9D9",
+    },
+  };
+  qCol.header.font = {
+    bold: true,
+  };
+  qCol.header.fill = {
+    type: "pattern",
+    pattern: "solid",
+    bgColor: {
+      argb: "D9D9D9",
+    },
+  };
+  cCol.header.font = {
+    bold: true,
+  };
+  cCol.header.fill = {
+    type: "pattern",
+    pattern: "solid",
+    bgColor: {
+      argb: "D9D9D9",
+    },
+  };
+  pCol.header.font = {
+    bold: true,
+  };
+  pCol.header.fill = {
+    type: "pattern",
+    pattern: "solid",
+    bgColor: {
+      argb: "D9D9D9",
     },
   };
 
@@ -931,7 +962,10 @@ app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
             },
           },
           (err) => {
-            return res.sendStatus(500);
+            if (err) {
+              console.error(err);
+              return res.sendStatus(500);
+            }
           }
         );
       } else {
