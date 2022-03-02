@@ -432,47 +432,13 @@ async function xlsx(average, guests, gameID) {
   cCol.header = "Body";
   pCol.header = "Úspěšnost";
 
-  //var headery = pSheet.getRow(1);
-
-  nCol.header.font = {
+  var headery = pSheet.getRow(1);
+  headery.font = {
     bold: true,
   };
-  nCol.header.fill = {
+  headery.fill = {
     type: "pattern",
-    pattern: "solid",
-    bgColor: {
-      argb: "D9D9D9",
-    },
-  };
-  qCol.header.font = {
-    bold: true,
-  };
-  qCol.header.fill = {
-    type: "pattern",
-    pattern: "solid",
-    bgColor: {
-      argb: "D9D9D9",
-    },
-  };
-  cCol.header.font = {
-    bold: true,
-  };
-  cCol.header.fill = {
-    type: "pattern",
-    pattern: "solid",
-    bgColor: {
-      argb: "D9D9D9",
-    },
-  };
-  pCol.header.font = {
-    bold: true,
-  };
-  pCol.header.fill = {
-    type: "pattern",
-    pattern: "solid",
-    bgColor: {
-      argb: "D9D9D9",
-    },
+    pattern: "lightGray",
   };
 
   nCol.alignment = { vertical: "middle", horizontal: "center" };
