@@ -214,7 +214,7 @@ async function validate(gameID) {
     if (!g.answers[game.questionID]) {
       game.guests[i].answers.push({
         correct: false,
-        position: null,
+        index: null,
         gainedCoins: 0,
       });
     }
@@ -345,10 +345,12 @@ async function evaluate(gameID) {
           ? average.questions[i].answers[aIndex].votes + 1 // pokud uz .votes existuje tak jen pricte
           : 1; // pokud ne tak vytvori
       } else {*/
-      average.questions[i].answers[a.index].votes = average.questions[i]
-        .answers[a.index]?.votes
-        ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
-        : 1; // pokud ne tak vytvori
+      if (a.index) {
+        average.questions[i].answers[a.index].votes = average.questions[i]
+          .answers[a.index]?.votes
+          ? average.questions[i].answers[a.index].votes + 1 // pokud uz .votes existuje tak jen pricte
+          : 1; // pokud ne tak vytvori
+      }
       //}
     });
   });
