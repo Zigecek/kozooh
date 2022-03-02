@@ -887,15 +887,15 @@ api.get("/ver", async (req, res) => {
 /////////////////////////////////////////////////////////////////////////// FILE RESULTS
 
 app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
-  console.logs('1');
+  console.log('1');
   fs.access(
     path.join(__dirname, "/results", path.basename(req.path)),
     fs.constants.F_OK,
     (err) => {
-      console.logs('2');
+      console.log('2');
       console.error(err);
       if (!err) {
-        console.logs('3');
+        console.log('3');
         res.sendFile(
           path.join(__dirname, "/results", path.basename(req.path)),
           {
