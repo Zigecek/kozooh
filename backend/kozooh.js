@@ -441,7 +441,7 @@ async function xlsx(average, guests, gameID) {
   pCol.header = "Úspěšnost";
 
   for (let i = 0; i < 5; i++) {
-    pSheet.getRow(1).getCell(["A", "B", "C", "D"][i]).font = {
+    pSheet.getCell(["A", "B", "C", "D"][i] + "1").font = {
       bold: true,
     }.fill = {
       type: "pattern",
