@@ -456,10 +456,7 @@ async function xlsx(average, guests, gameID) {
 
   /// Questions - sheet
   var qSheet = workbook.addWorksheet("Questions");
-  /*
-  average.questions.forEach(q => {
-    var quC
-  })*/
+
   try {
     var stream = fs.createWriteStream(
       path.join(__dirname, "./results", gameID + ".xlsx")

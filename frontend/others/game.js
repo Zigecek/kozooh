@@ -21,12 +21,11 @@ socket.on("connect", () => {
     })
     .then(function (res) {})
     .catch(function (error) {
-      console.log(error);
+      console.error(error);
     });
 });
 
 socket.on("screen", async (screen) => {
-  console.log(screen);
   if (screen.is == "STARTING") {
     stopInterval();
     $("#screen").html($("#starting").html());
@@ -178,7 +177,6 @@ function startGame() {
 }
 
 socket.on("auth", (x) => {
-  console.log(x);
   role = x.role;
   if (role == "CONTROL") {
     $("#startGame").removeClass("visually-hidden");
@@ -197,7 +195,7 @@ function runInterval(roundTime) {
   timeLast.innerText = roundTime.toString();
   progress.style.animation = "fade " + roundTime + "s";
 
-  const iter = (roundTime) => {
+  const inter = (roundTime) => {
     timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
     $("#timeLast").removeClass("visually-hidden");
     $("#pomlcka").removeClass("visually-hidden");
