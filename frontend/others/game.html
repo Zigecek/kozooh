@@ -64,7 +64,13 @@
     </header>
     <div
       id="progress"
-      style="height: 2%; position: relative; left: 0; width: 100vw"
+      style="
+        height: 2%;
+        position: relative;
+        left: 0;
+        width: 100vw;
+        background-color: #eff5f5;
+      "
     ></div>
 
     <div class="position-fixed end-0" id="alerts"></div>
@@ -482,7 +488,11 @@
           rgbToHex(239, 245, 245);
       }
       function rgbToHex(r, g, b) {
-        return "#" + r.toString(16) + g.toString(16) + b.toString(16);
+        const toHex = (c) => {
+          var v16 = c.toString(16);
+          return v16.length == 0 ? "0" + v16 : v16;
+        };
+        return "#" + toHex(r) + toHex(g) + toHex(b);
       }
       function scaleValue(value, from, to) {
         var scale = (to[1] - to[0]) / (from[1] - from[0]);
