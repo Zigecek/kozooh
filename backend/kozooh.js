@@ -448,7 +448,7 @@ async function xlsx(average, guests, gameID) {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      bgColor: {
+      fgColor: {
         argb: "40FFFFFF",
       },
     };
