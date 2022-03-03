@@ -436,6 +436,7 @@
       function runInterval(roundTime) {
         var progress = document.getElementById("progress");
         var timeLast = document.getElementById("timeLast");
+        timeLast.innerText = roundTime.toString();
         interval = setInterval(() => {
           intervalTime += 20;
 
