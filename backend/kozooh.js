@@ -441,11 +441,16 @@ async function xlsx(average, guests, gameID) {
   pCol.header = "Úspěšnost";
 
   for (let i = 0; i < 4; i++) {
-    pSheet.getCell(["A", "B", "C", "D"][i] + "1").font = {
+    var cell = pSheet.getCell(["A", "B", "C", "D"][i] + "1");
+    cell.font = {
       bold: true,
-    }.fill = {
+    };
+    cell.fill = {
       type: "pattern",
-      pattern: "gray125",
+      pattern: "solid",
+      bgColor: {
+        argb: "FFD9D9D9",
+      },
     };
   }
 
