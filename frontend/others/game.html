@@ -444,8 +444,10 @@
         var progress = document.getElementById("progress");
         var timeLast = document.getElementById("timeLast");
         timeLast.innerText = roundTime.toString();
+
+        progress.style.animation = "fade " + roundTime + "s";
+
         interval = setInterval(() => {
-          progress.style.animation = "fade " + roundTime + "s";
           timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
         }, 1000);
       }
