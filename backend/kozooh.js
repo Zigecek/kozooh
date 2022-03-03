@@ -432,14 +432,14 @@ async function xlsx(average, guests, gameID) {
   cCol.header = "Body";
   pCol.header = "Úspěšnost";
 
-  var headery = pSheet.getRow(1);
-  headery.font = {
-    bold: true,
-  };
-  headery.fill = {
-    type: "pattern",
-    pattern: "lightGray",
-  };
+  for (let i = 0; i < 5; i++) {
+    pSheet.getCell(["A", "B", "C", "D"][i] + "1").font = {
+      bold: true,
+    }.fill = {
+      type: "pattern",
+      pattern: "gray125",
+    };
+  }
 
   nCol.alignment = { vertical: "middle", horizontal: "center" };
   qCol.alignment = { vertical: "middle", horizontal: "center" };
