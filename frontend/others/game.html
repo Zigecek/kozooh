@@ -470,6 +470,8 @@
         clearInterval(interval);
         intervalTime = 0;
 
+        $("#countdown-time").text("X");
+
         document.getElementById("progress").style["background-color"] =
           rgbToHex(239, 245, 245);
       }
