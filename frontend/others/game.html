@@ -464,7 +464,7 @@
           var r =
             width <= 50 ? 255 : scaleValue(Number(width), [50, 100], [255, 0]);
           var g =
-            width >= 50 ? 255 : scaleValue(Number(width), [0, 50], [255, 0]);
+            width >= 50 ? 255 : scaleValue(Number(width), [50, 0], [255, 0]);
           console.log(r, g, width);
 
           var hex = rgbToHex(r, g, 0);
