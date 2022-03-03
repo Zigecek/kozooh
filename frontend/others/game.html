@@ -455,7 +455,7 @@
 
         interval = setInterval(() => {
           timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
-          $("#countdown-time").removeClass("visually-hidden");
+          $("#timeLast").removeClass("visually-hidden");
           $("#pomlcka").removeClass("visually-hidden");
         }, 1000);
       }
@@ -464,7 +464,7 @@
         clearInterval(interval);
         intervalTime = 0;
 
-        $("#countdown-time").addClass("visually-hidden");
+        $("#timeLast").addClass("visually-hidden");
         $("#pomlcka").addClass("visually-hidden");
 
         var prog = document.getElementById("progress");
