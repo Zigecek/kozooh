@@ -449,7 +449,7 @@ async function xlsx(average, guests, gameID) {
       type: "pattern",
       pattern: "solid",
       bgColor: {
-        argb: "FFD9D9D9",
+        argb: "40FFFFFF",
       },
     };
   }
