@@ -453,13 +453,14 @@
        g: 0             <             255 --------------------------255
 
           */
-
+          console.log(r, g, width);
           var r = width < 100 ? 255 : scaleValue(width, [50, 100], [255, 0]);
           var g = width >= 50 ? 255 : scaleValue(width, [50, 0], [255, 0]);
 
           progress.style["background-color"] = rgbToHex(r, g, 0);
 
           if (intervalTime == 1000) {
+            intervalTime = 0;
             timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
           }
         }, 1000 / 50);
