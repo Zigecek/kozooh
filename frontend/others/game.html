@@ -490,7 +490,7 @@
       function rgbToHex(r, g, b) {
         const toHex = (c) => {
           var v16 = c.toString(16);
-          return v16.length == 0 ? "0" + v16 : v16;
+          return v16.length == 1 ? "0" + v16 : v16;
         };
         return "#" + toHex(r) + toHex(g) + toHex(b);
       }
