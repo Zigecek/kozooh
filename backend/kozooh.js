@@ -193,13 +193,16 @@ async function question(gameID) {
     questionID: game.questionID + 1,
   });
 
-  io.to(gameID + "control").emit("screen", {
-    is: "QUESTION-SHOWED",
-    question: temp.questions[index].question,
-    answers: temp.questions[index].answers.map((x) => x.answer),
-    roundTime: temp.roundTime,
-    questionID: game.questionID + 1,
-  });
+  if (!temp.show) {
+    io.to(gameID + "control").emit("screen", {
+      is: "QUESTION-SHOWED",
+      question: temp.questions[index].question,
+      answers: temp.questions[index].answers.map((x) => x.answer),
+      roundTime: temp.roundTime,
+      questionID: game.questionID + 1,
+    });
+  }
+
   setTimeout(async () => {
     var game = await Game.findOne({ code: gameID });
     if (game.stageID == stageID) {

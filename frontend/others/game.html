@@ -384,6 +384,7 @@
             );
           }
         } else if (screen.is == "RESULT") {
+          stopInterval();
           if (role != "CONTROL") {
             $("#screen").html($("#result").html());
             $("#resIcon").attr(
