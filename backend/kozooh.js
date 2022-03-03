@@ -338,8 +338,6 @@ async function evaluate(gameID) {
   var guests = [];
 
   game.guests.forEach((g, gi) => {
-    console.log(g);
-    console.log(average.questions);
     var correct = g.answers.filter((a) => a.correct).length; // počet spravnych odpovedi
     var uspesnost = Math.floor((correct / average.questions.length) * 100); // uspesnost v procentech
 
@@ -485,6 +483,7 @@ io.on("connection", (socket) => {
   });
   socket.on("answer", async (res) => {
     const { index, gameID } = res;
+    if (![0, 1, 2, 3].includes(index)) return;
     var game = await Game.findOne({ code: gameID });
     var temp = await Template.findOne({ id: game.template.id });
     if (game) {
@@ -498,14 +497,8 @@ io.on("connection", (socket) => {
             var maxTime = temp.roundTime * 1000;
 
             var coins = scaleValue(time, [0, maxTime], [1000, 600]);
-            console.log(coins);
 
             guest.answers.push({
-              correct: true,
-              index,
-              gainedCoins: coins,
-            });
-            console.log({
               correct: true,
               index,
               gainedCoins: coins,
@@ -517,11 +510,6 @@ io.on("connection", (socket) => {
             );
           } else {
             guest.answers.push({
-              correct: false,
-              index,
-              gainedCoins: 0,
-            });
-            console.log({
               correct: false,
               index,
               gainedCoins: 0,
