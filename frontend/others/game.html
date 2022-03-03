@@ -460,7 +460,7 @@
           console.log(r, g, width);
 
           var hex = rgbToHex(r, g, 0);
-          cinsole.log(hex);
+          console.log(hex);
 
           progress.style["background-color"] = hex;
 
@@ -476,6 +476,7 @@
         intervalTime = 0;
 
         $("#countdown-time").text("X");
+        document.getElementById("progress").style["width"] = "100vw";
 
         document.getElementById("progress").style["background-color"] =
           rgbToHex(239, 245, 245);
