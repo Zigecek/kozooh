@@ -567,13 +567,15 @@ api.post("/game-auth", async (req, res) => {
             coins: guest.coins,
           });
           socket.join(gameID);
-          io.to(gameID).emit("screen", {
-            is: "STARTING",
-            guests: game.guests.map((g) => ({
-              nickname: g.nickname,
-              coins: g.coins,
-            })),
-          });
+          if (game.state.is == "STARTING") {
+            io.to(gameID).emit("screen", {
+              is: "STARTING",
+              guests: game.guests.map((g) => ({
+                nickname: g.nickname,
+                coins: g.coins,
+              })),
+            });
+          }
         }
       } else {
         io.sockets.sockets.get(sid)?.disconnect(true);
