@@ -13,3 +13,14 @@
 .opacity0 {
   opacity: 0;
 }
+
+@keyframes fade {
+  from {
+    background-color: lime;
+    width: 100vw;
+  }
+  to {
+    background-color: red;
+    width: 0vw;
+  }
+}

@@ -445,49 +445,19 @@
         var timeLast = document.getElementById("timeLast");
         timeLast.innerText = roundTime.toString();
         interval = setInterval(() => {
-          intervalTime += 100;
-
-          var wdth = 100 / (roundTime * 10);
-          var width = Number(progress.style["width"].replace("vw", "")) - wdth;
-          width = width < 0 ? 0 : width;
-
-          progress.style["width"] = width.toString() + "vw";
-
-          /*
-
-       w: 0% ------------------------ 50% ------------------------ 100%
-       r: 255 ----------------------- 255             >              0
-       g: 0             <             255 --------------------------255
-
-          */
-
-          var r =
-            width <= 50 ? 255 : scaleValue(Number(width), [50, 100], [255, 0]);
-          var g =
-            width >= 50 ? 255 : scaleValue(Number(width), [50, 0], [255, 0]);
-          console.log(r, g, width);
-
-          var hex = rgbToHex(r, g, 0);
-          console.log(hex);
-
-          progress.style.backgroundColor = hex;
-
-          if (intervalTime == 1000) {
-            intervalTime = 0;
-            timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
-          }
-        }, 1000 / 10);
+          progress.style.animation = "fade " + roundTime + "s";
+          timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
+        }, 1000);
       }
 
       function stopInterval() {
         clearInterval(interval);
         intervalTime = 0;
 
-        $("#countdown-time").text("X");
-        document.getElementById("progress").style["width"] = "100vw";
+        var prog = document.getElementById("progress");
 
-        document.getElementById("progress").style["background-color"] =
-          rgbToHex(239, 245, 245);
+        $("#countdown-time").text("X");
+        prog.style.animation = "";
       }
       function rgbToHex(r, g, b) {
         const toHex = (c) => {
