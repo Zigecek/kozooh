@@ -36,7 +36,7 @@
             />
           </div>
           <div class="mb-3">
-            <button class="btn btn-primary btn-lg" onclick="join()">
+            <button id="submit" class="btn btn-primary btn-lg" onclick="join()">
               Připojit
             </button>
             <img
@@ -90,6 +90,7 @@
       function join() {
         if ($("#game-id").val() && $("#nickname").val()) {
           var url = "/" + $("#game-id").val();
+          $('#submit').attr('disabled', true);
           axios
             .post("/join", {
               nickname: $("#nickname").val(),
@@ -98,12 +99,16 @@
             .then(function (res) {
               if (res.data.stav == "notStarting") {
                 alertos(5000, "warning", "Tato hra už bohužel probíhá!", 1000);
+                $('#submit').attr('disabled', false);
               } else if (res.data.stav == "missingG") {
                 alertos(5000, "warning", "Musíš zadat číslo hry...", 1000);
+                $('#submit').attr('disabled', false);
               } else if (res.data.stav == "missingN") {
                 alertos(5000, "warning", "Bez přezdívky to nejde...", 1000);
+                $('#submit').attr('disabled', false);
               } else if (res.data.stav == "notExist") {
                 alertos(5000, "danger", "Tato hra neexistuje.", 1000);
+                $('#submit').attr('disabled', false);
               } else if (res.data.stav == "in") {
                 window.location.href = url;
               }
@@ -111,6 +116,7 @@
             .catch(function (error) {
               if (error) {
                 alertos(5000, "danger", "Toto číslo hry neexistuje!", 1000);
+                $('#submit').attr('disabled', false);
                 $("#game-id").val("");
               }
               console.log(error);
