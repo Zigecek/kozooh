@@ -438,7 +438,7 @@
         var timeLast = document.getElementById("timeLast");
         timeLast.innerText = roundTime.toString();
         interval = setInterval(() => {
-          intervalTime += 20;
+          intervalTime += 10;
 
           var wdth = 100 / (roundTime * 50);
           var width = Number(progress.style["width"].replace("vw", "")) - wdth;
@@ -463,7 +463,7 @@
             intervalTime = 0;
             timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
           }
-        }, 1000 / 50);
+        }, 1000 / 10);
       }
 
       function stopInterval() {
