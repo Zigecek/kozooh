@@ -18,14 +18,27 @@
       <div class="container">
         <div class="row">
           <div class="col-8">
-            <h3 id="nickname" style="font-size: 3vh">agafg</h3>
+            <h3 id="nickname" style="font-size: 3vh">
+              <span id="questionCurrent">X</span>/<span id="questionTotal"
+                >X</span
+              >
+              - <span id="timeLast">X</span>
+            </h3>
           </div>
           <div class="col-2">
-            <h3 id="nickname" style="font-size: 3vh">agafg</h3>
+            <h3 id="nickname" style="font-size: 3vh"></h3>
           </div>
           <div class="col-2 align-self-center">
-            <h3 id="coins" class="m-0" style="font-size: 3vh; display: inline-block;"></h3>
-            <div id="coinIcon" class="m-0" style="height: 5vh; width: 5vh; display: inline-block;">
+            <h3
+              id="coins"
+              class="m-0"
+              style="font-size: 3vh; display: inline-block"
+            ></h3>
+            <div
+              id="coinIcon"
+              class="m-0"
+              style="height: 5vh; width: 5vh; display: inline-block"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="100%"
@@ -49,6 +62,10 @@
         </div>
       </div>
     </header>
+    <div
+      id="progress"
+      style="height: 2%; position: relative; left: 0; width: 100vw"
+    ></div>
 
     <div class="position-fixed end-0" id="alerts"></div>
 
@@ -60,7 +77,7 @@
       START !!!
     </button>
 
-    <div id="screen" class="m-0" style="height: 93%"></div>
+    <div id="screen" class="m-0" style="height: 91%"></div>
     <audio id="audioplayer" loop></audio>
 
     <div style="display: none">
@@ -184,6 +201,8 @@
       $("#game-number").text(gameID);
       var queryDict = {};
       var role = "";
+      var interval = null;
+      var intervalTime = 0;
       location.search
         .substr(1)
         .split("?")
@@ -207,6 +226,7 @@
       socket.on("screen", async (screen) => {
         console.log(screen);
         if (screen.is == "STARTING") {
+          stopInterval();
           $("#screen").html($("#starting").html());
           $("#game-number").text(gameID);
           screen.guests.forEach((g) => {
@@ -220,9 +240,13 @@
             $("#player-list").append(html);
           });
         } else if (screen.is == "COUNTDOWN") {
+          stopInterval();
           $("#screen").html($("#countdown").html());
           $("#countdown-time").text(screen.time);
+          $("#questionTotal").text(screen.totalQ);
+          $("#questionCurrent").text(screen.questionID);
         } else if (screen.is == "QUESTION-SHOWED") {
+          runInterval(screen.roundTime);
           $("#screen").html($("#question-showed").html());
           $("#question-text").text(screen.question);
           var type = ["primary", "danger", "success", "warning"];
@@ -253,6 +277,7 @@
           }
         } else if (screen.is == "QUESTION-HIDDEN") {
           if (role == "CONTROL") return;
+          runInterval(screen.roundTime);
           $("#screen").html($("#question-hidden").html());
           var type = ["primary", "danger", "success", "warning"];
           for (let i = 0; i < screen.answers.length; i++) {
@@ -266,6 +291,7 @@
             $("#button-list").append(html);
           }
         } else if (screen.is == "PAUSE") {
+          stopInterval();
           document.getElementById("audioplayer").pause();
           $("#screen").html($("#pause").html());
           screen.guests.forEach((g, i) => {
@@ -287,6 +313,7 @@
             );
           }
         } else if (screen.is == "EVALUATION") {
+          stopInterval();
           document.getElementById("audioplayer").pause();
           $("#screen").html($("#evaluation").html());
           screen.average.questions.forEach((q, qi) => {
@@ -405,6 +432,53 @@
           $("#coins").text(x.coins);
         }
       });
+
+      function runInterval(roundTime) {
+        var progress = document.getElementById("progress");
+        var timeLast = document.getElementById("timeLast");
+        interval = setInterval(() => {
+          intervalTime += 20;
+
+          var wdth = 100 / (roundTime * 50);
+          var width = Number(progress.style["width"].replace("vw", "")) - wdth;
+          width = width < 0 ? 0 : width;
+
+          progress.style["width"] = width.toString() + "vw";
+
+          /*
+
+       w: 0% ------------------------ 50% ------------------------ 100%
+       r: 255 ----------------------- 255             >              0
+       g: 0             <             255 --------------------------255
+
+          */
+
+          var r = width < 100 ? 255 : scaleValue(width, [50, 100], [255, 0]);
+          var g = width >= 50 ? 255 : scaleValue(width, [50, 0], [255, 0]);
+
+          progress.style["background-color"] = rgbToHex(r, g, 0);
+
+          if (intervalTime == 1000) {
+            timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
+          }
+        }, 1000 / 50);
+      }
+
+      function stopInterval() {
+        clearInterval(interval);
+        intervalTime = 0;
+
+        document.getElementById("progress").style["background-color"] =
+          rgbToHex(0, 0, 0);
+      }
+      function rgbToHex(r, g, b) {
+        return "#" + r.toString(16) + g.toString(16) + b.toString(16);
+      }
+      function scaleValue(value, from, to) {
+        var scale = (to[1] - to[0]) / (from[1] - from[0]);
+        var capped = Math.min(from[1], Math.max(from[0], value)) - from[0];
+        return ~~(capped * scale + to[0]);
+      }
 
       function alertos(time, type, text, fadeouttime) {
         var div = document.createElement("div");

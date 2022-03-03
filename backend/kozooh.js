@@ -127,6 +127,8 @@ app.use("/api", api);
 
 async function runCountdown(gameID) {
   //////////////////////////// COUNTDOWN
+  var game = await Game.findOne({ code: gameID });
+  var temp = await Template.findOne({ id: game.template.id });
   const stageID = uuid();
   await Game.updateOne(
     { code: gameID },
@@ -140,6 +142,8 @@ async function runCountdown(gameID) {
     io.to(gameID).emit("screen", {
       is: "COUNTDOWN",
       time: t,
+      questionID: game.questionID + 1,
+      totalQ: temp.questions.length,
     });
   }
   countDown("5");
@@ -156,7 +160,7 @@ async function runCountdown(gameID) {
     countDown("1");
   }, 4_000);
   setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
+    game = await Game.findOne({ code: gameID });
     if (game.stageID == stageID) {
       question(gameID);
     }
@@ -173,7 +177,7 @@ async function question(gameID) {
     { code: gameID },
     {
       "state.is": "QUESTION",
-      questionID: game.questionID + 1,
+      questionID: index,
       questionTime: Date.now(),
       stageID,
     }
@@ -185,12 +189,16 @@ async function question(gameID) {
     answers: temp.show
       ? temp.questions[index].answers.map((x) => x.answer)
       : temp.questions[index].answers.map((x) => ""),
+    roundTime: temp.roundTime,
+    questionID: game.questionID + 1,
   });
 
   io.to(gameID + "control").emit("screen", {
     is: "QUESTION-SHOWED",
     question: temp.questions[index].question,
     answers: temp.questions[index].answers.map((x) => x.answer),
+    roundTime: temp.roundTime,
+    questionID: game.questionID + 1,
   });
   setTimeout(async () => {
     var game = await Game.findOne({ code: gameID });
