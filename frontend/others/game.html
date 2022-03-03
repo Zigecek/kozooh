@@ -18,11 +18,13 @@
       <div class="container">
         <div class="row">
           <div class="col-8">
-            <h3 style="font-size: 3vh">
-              <span id="questionCurrent">X</span>/<span id="questionTotal"
+            <h3 id="statss" style="font-size: 3vh" class="visually-hidden">
+              <span id="questionCurrent" class="visually-hidden">X</span>/<span
+                id="questionTotal"
+                class="visually-hidden"
                 >X</span
-              >
-              - <span id="timeLast">X</span>
+              ><span id="pomlcka" class="visually-hidden"> - </span>
+              <span id="timeLast" class="visually-hidden">X</span>
             </h3>
           </div>
           <div class="col-2">
@@ -65,7 +67,7 @@
     <div
       id="progress"
       style="
-        height: 2%;
+        height: 0.5%;
         position: relative;
         left: 0;
         width: 100vw;
@@ -83,7 +85,7 @@
       START !!!
     </button>
 
-    <div id="screen" class="m-0" style="height: 91%"></div>
+    <div id="screen" class="m-0" style="height: 92.5%"></div>
     <audio id="audioplayer" loop></audio>
 
     <div style="display: none">
@@ -249,8 +251,13 @@
           stopInterval();
           $("#screen").html($("#countdown").html());
           $("#countdown-time").text(screen.time);
-          $("#questionTotal").text(screen.totalQ);
-          $("#questionCurrent").text(screen.questionID);
+          $("#questionTotal")
+            .removeClass("visually-hidden")
+            .text(screen.totalQ);
+          $("#questionCurrent")
+            .removeClass("visually-hidden")
+            .text(screen.questionID);
+          $("#statss").removeClass("visually-hidden");
         } else if (screen.is == "QUESTION-SHOWED") {
           runInterval(screen.roundTime);
           $("#screen").html($("#question-showed").html());
@@ -444,11 +451,12 @@
         var progress = document.getElementById("progress");
         var timeLast = document.getElementById("timeLast");
         timeLast.innerText = roundTime.toString();
-
         progress.style.animation = "fade " + roundTime + "s";
 
         interval = setInterval(() => {
           timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
+          $("#countdown-time").removeClass("visually-hidden");
+          $("#pomlcka").removeClass("visually-hidden");
         }, 1000);
       }
 
@@ -456,22 +464,11 @@
         clearInterval(interval);
         intervalTime = 0;
 
-        var prog = document.getElementById("progress");
+        $("#countdown-time").addClass("visually-hidden");
+        $("#pomlcka").addClass("visually-hidden");
 
-        $("#countdown-time").text("X");
+        var prog = document.getElementById("progress");
         prog.style.animation = "";
-      }
-      function rgbToHex(r, g, b) {
-        const toHex = (c) => {
-          var v16 = c.toString(16);
-          return v16.length == 1 ? "0" + v16 : v16;
-        };
-        return "#" + toHex(r) + toHex(g) + toHex(b);
-      }
-      function scaleValue(value, from, to) {
-        var scale = (to[1] - to[0]) / (from[1] - from[0]);
-        var capped = Math.min(from[1], Math.max(from[0], value)) - from[0];
-        return ~~(capped * scale + to[0]);
       }
 
       function alertos(time, type, text, fadeouttime) {

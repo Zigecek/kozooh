@@ -11,7 +11,6 @@ const serveStatic = require("serve-static");
 const User = require("./models/user");
 const Game = require("./models/game");
 const Template = require("./models/template");
-const Guest = require("./models/guest");
 const bodyParser = require("body-parser");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const socketIo = require("socket.io");
@@ -443,7 +442,7 @@ async function xlsx(average, guests, gameID) {
   cCol.header = "Body";
   pCol.header = "Úspěšnost";
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     pSheet.getCell(["A", "B", "C", "D"][i] + "1").font = {
       bold: true,
     }.fill = {
@@ -498,12 +497,6 @@ io.on("connection", (socket) => {
             var time = Date.now() - game.questionTime;
             var maxTime = temp.roundTime * 1000;
 
-            function scaleValue(value, from, to) {
-              var scale = (to[1] - to[0]) / (from[1] - from[0]);
-              var capped =
-                Math.min(from[1], Math.max(from[0], value)) - from[0];
-              return ~~(capped * scale + to[0]);
-            }
             var coins = scaleValue(time, [0, maxTime], [1000, 600]);
             console.log(coins);
 
@@ -951,5 +944,11 @@ app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
     }
   );
 });
+
+function scaleValue(value, from, to) {
+  var scale = (to[1] - to[0]) / (from[1] - from[0]);
+  var capped = Math.min(from[1], Math.max(from[0], value)) - from[0];
+  return ~~(capped * scale + to[0]);
+}
 
 console.log("Kozooh - " + port);
