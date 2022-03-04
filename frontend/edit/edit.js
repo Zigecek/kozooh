@@ -17,21 +17,19 @@ axios
   .then(function (res) {
     var temp = res.data;
 
+    $("#template-name").val(temp.name);
     $("#question-time").val(temp.roundTime);
     $("#pause-time").val(temp.pauseTime);
     $("#template-show").prop("checked", temp.show),
-    $("#template-pause").prop("checked", temp.pause),
-
-    temp.questions.forEach((q, qi) => {
-      newQuestion();
-      $("#q-" + qi).val(q.question);
-      questions.splice(qi, 1, q);
-      q.answers.forEach((a, ai) => {
-        newAnswer(qi);
-        $("#a-" + qi + "-" + ai).val(a.answer);
-        $("#a-" + qi + "-" + ai + "-correct").prop("checked", true);
+      $("#template-pause").prop("checked", temp.pause),
+      temp.questions.forEach((q, qi) => {
+        newQuestion(q.question);
+        q.answers.forEach((a, ai) => {
+          newAnswer(qi, a.answer, a.correct);
+          $("#a-" + qi + "-" + ai).val(a.answer);
+          $("#a-" + qi + "-" + ai + "-correct").prop("checked", a.correct);
+        });
       });
-    });
   })
   .catch(function (error) {
     console.log(error);
@@ -137,7 +135,7 @@ function createTemplate() {
     });
 }
 
-function newQuestion() {
+function newQuestion(question) {
   const newIndex = questions.length;
 
   const html = $.parseHTML(`
@@ -195,14 +193,17 @@ function newQuestion() {
               `);
   $("#question-list").append(html);
   questions.push({
-    question: "",
-    answers: [
-      {
-        answer: "",
-        correct: false,
-      },
-    ],
+    question: question ? question : "",
+    answers: question
+      ? []
+      : [
+          {
+            answer: "",
+            correct: false,
+          },
+        ],
   });
+
   inputListeners();
 }
 
@@ -211,7 +212,7 @@ function deleteQuestion(index) {
   questions[index] = undefined;
 }
 
-function newAnswer(index) {
+function newAnswer(index, answer, correct) {
   const newIndex = questions[index].answers.length;
   const html = $.parseHTML(
     `<li id="a-${index}-${newIndex}-body" class="list-group-item">
@@ -247,8 +248,8 @@ function newAnswer(index) {
   );
   $(`#q-${index}-list`).append(html);
   questions[index].answers.push({
-    answer: "",
-    correct: false,
+    answer: answer ? answer : "",
+    correct: correct ? correct : false,
   });
   inputListeners();
 }
