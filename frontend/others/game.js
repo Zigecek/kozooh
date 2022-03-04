@@ -155,6 +155,12 @@ socket.on("screen", (screen) => {
           $("#aBtn" + i)
             .attr("disabled", true)
             .addClass("opacity0");
+        } else {
+          $("#aBtn" + i)
+            .addClass("btn-success")
+            .removeClass("btn-primary")
+            .removeClass("btn-danger")
+            .removeClass("btn-warning");
         }
       }
     }
