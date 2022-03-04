@@ -124,7 +124,7 @@ app.get("/edit", auth, async (req, res) => {
     res.sendStatus(401);
   }
 
-  res.status(200).send({ templates: userTemplates });
+  res.status(200).send({ templates: templates });
 });
 
 //////////////////////////////////////////////// STATIC ///////////////////////////

@@ -6,7 +6,7 @@ location.search
     queryDict[item.split("=")[0]] = item.split("=")[1];
   });
 var questions = [];
-const id = queryDisct.id;
+const id = queryDict.id;
 
 axios
   .get("/api/user-get-temp", {
