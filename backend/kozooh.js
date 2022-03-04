@@ -113,7 +113,7 @@ app.get("/others/game.html", (req, res) => {
 app.get("/others/verify.html", (req, res) => {
   res.sendStatus(401);
 });
-app.get("/edit", auth, async (req, res) => {
+app.get("/upravit", auth, async (req, res) => {
   const templates = await Template.find({
     "author.username": req.session.user,
   });
