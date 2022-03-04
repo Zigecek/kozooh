@@ -113,6 +113,19 @@ app.get("/others/game.html", (req, res) => {
 app.get("/others/verify.html", (req, res) => {
   res.sendStatus(401);
 });
+app.get("/edit", auth, async (req, res) => {
+  const templates = await Template.find({
+    "author.username": req.session.user,
+  });
+
+  if (templates.find((x) => x.id == req.query.id)) {
+    res.status(200).sendFile(path.resolve("frontend/edit/index.html"));
+  } else {
+    res.sendStatus(401);
+  }
+
+  res.status(200).send({ templates: userTemplates });
+});
 
 //////////////////////////////////////////////// STATIC ///////////////////////////
 
@@ -787,8 +800,22 @@ api.get("/user-games", auth, async (req, res) => {
   res.status(200).send({ templates: userTemplates });
 });
 
+api.get("/user-get-temp", auth, async (req, res) => {
+  const templates = await Template.find({
+    "author.username": req.session.user,
+  });
+
+  var temp = templates.find((x) => x.id == req.query.id);
+  if (temp) {
+    res.status(200).send(temp);
+  } else {
+    res.sendStatus(401);
+  }
+});
+
 api.post("/create-template", auth, async (req, res) => {
-  var { questions, name, roundTime, show, pause, pauseTime } = req.body;
+  var { questions, name, roundTime, show, pause, pauseTime, edit } = req.body;
+
   if (roundTime <= 0) {
     return res.status(200).send({
       stav: "negative",
@@ -859,30 +886,50 @@ api.post("/create-template", auth, async (req, res) => {
     });
   }
 
-  const template = await Template.create({
-    _id: new require("mongoose").Types.ObjectId(),
-    id: uuid(),
-    used: 0,
-    questions: q2,
-    author: {
-      username: req.session.user,
-    },
-    created: Date.now(),
-    name,
-    show,
-    pause,
-    roundTime,
-    pauseTime,
-  });
+  // all checks have been done
 
-  const user = await User.findOne({ username: req.session.user });
-  var templates = user.templates;
-  templates.push(template.id);
-  await User.findOneAndUpdate({ username: req.session.user }, { templates });
+  if (edit.is == true) {
+    var temp = await Template.updateOne(
+      { id: edit.id },
+      {
+        questions: q2,
+        name,
+        show,
+        pause,
+        roundTime,
+        pauseTime,
+      }
+    );
 
-  return res.status(200).send({
-    stav: "redirect",
-  });
+    return res.status(200).send({
+      stav: "redirect",
+    });
+  } else {
+    const template = await Template.create({
+      _id: new require("mongoose").Types.ObjectId(),
+      id: uuid(),
+      used: 0,
+      questions: q2,
+      author: {
+        username: req.session.user,
+      },
+      created: Date.now(),
+      name,
+      show,
+      pause,
+      roundTime,
+      pauseTime,
+    });
+
+    const user = await User.findOne({ username: req.session.user });
+    var templates = user.templates;
+    templates.push(template.id);
+    await User.findOneAndUpdate({ username: req.session.user }, { templates });
+
+    return res.status(200).send({
+      stav: "redirect",
+    });
+  }
 });
 
 api.get("/smazat", async (req, res) => {

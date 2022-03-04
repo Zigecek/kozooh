@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="CZ-cs">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kozooh - Upravování předlohy</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+
+  <body class="bg-bg">
+    <div class="position-fixed end-0" id="alerts"></div>
+    <div class="container">
+      <h1 class="text-center fs-1 m-3">Upravit předlohu</h1>
+      <div class="input-lg">
+        <input
+          id="template-name"
+          type="text"
+          class="form-control m-2"
+          placeholder="Název"
+        />
+        <input
+          id="template-show"
+          type="checkbox"
+          class="form-check-input m-2"
+        />
+        <label class="form-check-label m-2" for="template-show"
+          >Zobrazovat otázky u hráčů</label
+        >
+
+        <input
+          id="template-pause"
+          type="checkbox"
+          class="form-check-input m-2"
+        />
+        <label class="form-check-label m-2" for="template-pause"
+          >Zobrazovat skóre mezi koly (pauzy)</label
+        >
+
+        <input
+          id="question-time"
+          type="number"
+          class="form-control m-2"
+          placeholder="Délka kola (vteřin)"
+        />
+        <input
+          id="pause-time"
+          type="number"
+          class="form-control m-2 visually-hidden"
+          placeholder="Délka pauzy (vteřin)"
+        />
+      </div>
+      <!-- Seznam otázek -->
+      <h2 class="fs-3 m-3">Otázky</h2>
+      <ul id="question-list" class="m-2 list-group">
+        <!-- DYNAMICKÉ -->
+        <!-- Otázka 1 -->
+        <li id="q-0-body" class="list-group-item">
+          <div class="d-flex bd-highlight">
+            <div class="align-self-center p-2 flex-grow-1 bd-highlight">
+              <input
+                id="q-0"
+                type="text"
+                class="form-control"
+                placeholder="Otázka"
+              />
+              <!-- Odpovědi -->
+              <h2 class="fs-5 m-3">Odpovědi</h2>
+              <ul id="q-0-list" class="m-2 list-group">
+                <!-- Odpověď 1 -->
+                <li id="a-0-0-body" class="list-group-item">
+                  <div class="d-flex bd-highlight">
+                    <div class="align-self-center p-2 flex-grow-1 bd-highlight">
+                      <input
+                        id="a-0-0"
+                        type="text"
+                        class="form-control"
+                        placeholder="Odpověď"
+                      />
+                      <div class="m-3 form-check">
+                        <input
+                          id="a-0-0-correct"
+                          type="checkbox"
+                          class="form-check-input"
+                        />
+                        <label class="form-check-label" for="a-0-0-correct"
+                          >Správná odpověď</label
+                        >
+                      </div>
+                    </div>
+                    <div class="align-self-center p-2 bd-highlight">
+                      <button
+                        onclick="deleteAnswer(0, 0)"
+                        class="m-2 btn btn-sm btn-danger"
+                      >
+                        Smazat
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <!-- Nová odpověď -->
+              <button class="btn btn-sm btn-primary" onclick="newAnswer(0)">
+                Nová odpověď
+              </button>
+            </div>
+            <div class="align-self-center p-2 bd-highlight">
+              <button
+                onclick="deleteQuestion(0)"
+                class="m-2 btn btn-sm btn-danger"
+              >
+                Smazat
+              </button>
+            </div>
+          </div>
+        </li>
+        <!-- // DYNAMICKÉ // -->
+      </ul>
+      <!-- Nová otázka -->
+      <button class="btn btn-sm btn-primary" onclick="newQuestion()">
+        Nová otázka
+      </button>
+      <br />
+      <button class="m-3 btn btn-lg btn-primary" onclick="createTemplate()">
+        Vytvořit předlohu
+      </button>
+    </div>
+    <div
+      id="divCheckbox"
+      style="visibility: hidden; width: 100%; margin-top: 7rem"
+    ></div>
+
+    <footer
+      class="w-100 footer mt-auto py-3 bg-panel position-fixed bottom-0 start-50 translate-middle-x"
+    >
+      <div class="container">
+        <div class="row">
+          <div class="col-8">
+            <a href="/">Hlavní</a>
+          </div>
+          <div id="account" class="col-4">
+            <a href="/prihlaseni">Přihlášení</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="./edit/edit.js"></script>
+  </body>
+</html>
