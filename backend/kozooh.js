@@ -258,9 +258,9 @@ async function result(gameID) {
   });
   io.to(gameID + "control").emit("screen", {
     is: "RESULT",
-    correct: temp.questions[game.questionID].answers.indexOf(
-      temp.questions[game.questionID].answers.find((x) => x.correct)
-    ),
+    correct: temp.questions[game.questionID].answers
+      .filter((x) => x.correct)
+      .map((x) => temp.questions[game.questionID].answers.indexOf(x)),
   });
   setTimeout(async () => {
     var game = await Game.findOne({ code: gameID });
