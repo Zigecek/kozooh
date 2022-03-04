@@ -409,10 +409,10 @@ async function xlsx(average, guests, gameID) {
   var pSheet = workbook.addWorksheet("Players");
 
   pSheet.columns = [
-    { header: "Přezdívka", key: "nickname", width: 15 },
-    { header: "Správné otázky", key: "questions", width: 15 },
-    { header: "Body", key: "coins", width: 15 },
-    { header: "Úspěšnost", key: "percent", width: 15 },
+    { header: "Přezdívka", key: "nickname", width: 20 },
+    { header: "Správné otázky", key: "questions", width: 20 },
+    { header: "Body", key: "coins", width: 20 },
+    { header: "Úspěšnost", key: "percent", width: 20 },
   ];
 
   var nColVals = guests.map((x) => x.nickname);
@@ -438,7 +438,7 @@ async function xlsx(average, guests, gameID) {
   nCol.header = "Přezdívka";
   qCol.header = "Správné otázky";
   cCol.header = "Body";
-  pCol.header = "Úspěšnost";
+  pCol.header = "Úspěšnost (%)";
 
   for (let i = 0; i < 4; i++) {
     var cell = pSheet.getCell(["A", "B", "C", "D"][i] + "1");
@@ -913,7 +913,6 @@ app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
     path.join(__dirname, "/results", path.basename(req.path)),
     fs.constants.F_OK,
     (err) => {
-      console.error(err);
       if (!err) {
         res.status(200).sendFile(
           path.join(__dirname, "/results", path.basename(req.path)),

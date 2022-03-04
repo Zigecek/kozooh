@@ -25,7 +25,7 @@ socket.on("connect", () => {
     });
 });
 
-socket.on("screen", async (screen) => {
+socket.on("screen", (screen) => {
   if (screen.is == "STARTING") {
     stopInterval();
     $("#screen").html($("#starting").html());
@@ -191,26 +191,12 @@ socket.on("auth", (x) => {
 
 function runInterval(roundTime) {
   var progress = document.getElementById("progress");
-  var timeLast = document.getElementById("timeLast");
-  timeLast.innerText = roundTime.toString();
   progress.style.animation = "fade " + roundTime + "s";
-
-  const inter = (roundTime) => {
-    timeLast.innerText = (Number(timeLast.innerText) - 1).toString();
-    $("#timeLast").removeClass("visually-hidden");
-    $("#pomlcka").removeClass("visually-hidden");
-  };
-
-  interval = setInterval(inter(roundTime), 1000);
-  inter(roundTime);
 }
 
 function stopInterval() {
   clearInterval(interval);
   intervalTime = 0;
-
-  $("#timeLast").addClass("visually-hidden");
-  $("#pomlcka").addClass("visually-hidden");
 
   var prog = document.getElementById("progress");
   prog.style.animation = "";
