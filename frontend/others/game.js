@@ -151,7 +151,7 @@ socket.on("screen", (screen) => {
       );
     } else {
       for (let i = 0; i <= 3; i++) {
-        if (screen.correct != i) {
+        if (!screen.correct.includes(i)) {
           $("#aBtn" + i)
             .attr("disabled", true)
             .addClass("opacity0");
