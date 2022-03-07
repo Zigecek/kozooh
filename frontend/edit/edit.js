@@ -19,18 +19,26 @@ axios
 
     $("#template-name").val(temp.name);
     $("#question-time").val(temp.roundTime);
+    $("#template-show").prop("checked", temp.show);
+    $("#template-pause").prop("checked", temp.pause);
+
     $("#pause-time").val(temp.pauseTime);
-    $("#template-show").prop("checked", temp.show),
-      $("#template-pause").prop("checked", temp.pause),
-      temp.questions.forEach((q, qi) => {
-        newQuestion(q.question);
-        $('q-' + qi).val(q.question);
-        q.answers.forEach((a, ai) => {
-          newAnswer(qi, a.answer, a.correct);
-          $("#a-" + qi + "-" + ai).val(a.answer);
-          $("#a-" + qi + "-" + ai + "-correct").prop("checked", a.correct);
-        });
+
+    if (temp.pause) {
+      $("#pause-time").removeClass("visually-hidden");
+    } else {
+      $("#pause-time").addClass("visually-hidden");
+    }
+
+    temp.questions.forEach((q, qi) => {
+      newQuestion(q.question);
+      $("q-" + qi).val(q.question);
+      q.answers.forEach((a, ai) => {
+        newAnswer(qi, a.answer, a.correct);
+        $("#a-" + qi + "-" + ai).val(a.answer);
+        $("#a-" + qi + "-" + ai + "-correct").prop("checked", a.correct);
       });
+    });
   })
   .catch(function (error) {
     console.log(error);
@@ -250,7 +258,7 @@ function newAnswer(index, answer, correct) {
   $(`#q-${index}-list`).append(html);
   questions[index].answers.push({
     answer: answer ? answer : "",
-    correct: correct ? correct : false,
+    correct: answer ? correct : false,
   });
   inputListeners();
 }
