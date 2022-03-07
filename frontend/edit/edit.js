@@ -145,13 +145,12 @@ function createTemplate() {
 
 function newQuestion(question) {
   const newIndex = questions.length;
-
   const html = $.parseHTML(`
     <li id="q-${newIndex}-body" class="list-group-item">
       <div class="d-flex bd-highlight">
         <div class="align-self-center p-2 flex-grow-1 bd-highlight">
           <input id="q-${newIndex}" type="text" class="form-control" placeholder="Otázka" ${
-    question ? "value=" + question : ""
+    question ? "value='" + question + "'" : ""
   } />
           <!-- Odpovědi -->
           <h2 class="fs-5 m-3">Odpovědi</h2>
@@ -233,7 +232,7 @@ function newAnswer(index, answer, correct) {
                     type="text"
                     class="form-control"
                     placeholder="Odpověď"
-                    ${answer ? "value=" + answer : ""}
+                    ${answer ? "value='" + answer + "'" : ""}
                   />
                   <div class="m-3 form-check">
                     <input
