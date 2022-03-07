@@ -56,66 +56,6 @@
       <h2 class="fs-3 m-3">Otázky</h2>
       <ul id="question-list" class="m-2 list-group">
         <!-- DYNAMICKÉ -->
-        <!-- Otázka 1 -->
-        <li id="q-0-body" class="list-group-item">
-          <div class="d-flex bd-highlight">
-            <div class="align-self-center p-2 flex-grow-1 bd-highlight">
-              <input
-                id="q-0"
-                type="text"
-                class="form-control"
-                placeholder="Otázka"
-              />
-              <!-- Odpovědi -->
-              <h2 class="fs-5 m-3">Odpovědi</h2>
-              <ul id="q-0-list" class="m-2 list-group">
-                <!-- Odpověď 1 -->
-                <li id="a-0-0-body" class="list-group-item">
-                  <div class="d-flex bd-highlight">
-                    <div class="align-self-center p-2 flex-grow-1 bd-highlight">
-                      <input
-                        id="a-0-0"
-                        type="text"
-                        class="form-control"
-                        placeholder="Odpověď"
-                      />
-                      <div class="m-3 form-check">
-                        <input
-                          id="a-0-0-correct"
-                          type="checkbox"
-                          class="form-check-input"
-                        />
-                        <label class="form-check-label" for="a-0-0-correct"
-                          >Správná odpověď</label
-                        >
-                      </div>
-                    </div>
-                    <div class="align-self-center p-2 bd-highlight">
-                      <button
-                        onclick="deleteAnswer(0, 0)"
-                        class="m-2 btn btn-sm btn-danger"
-                      >
-                        Smazat
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-              <!-- Nová odpověď -->
-              <button class="btn btn-sm btn-primary" onclick="newAnswer(0)">
-                Nová odpověď
-              </button>
-            </div>
-            <div class="align-self-center p-2 bd-highlight">
-              <button
-                onclick="deleteQuestion(0)"
-                class="m-2 btn btn-sm btn-danger"
-              >
-                Smazat
-              </button>
-            </div>
-          </div>
-        </li>
         <!-- // DYNAMICKÉ // -->
       </ul>
       <!-- Nová otázka -->

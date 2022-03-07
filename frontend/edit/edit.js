@@ -24,6 +24,7 @@ axios
       $("#template-pause").prop("checked", temp.pause),
       temp.questions.forEach((q, qi) => {
         newQuestion(q.question);
+        $('q-' + qi).val(q.question);
         q.answers.forEach((a, ai) => {
           newAnswer(qi, a.answer, a.correct);
           $("#a-" + qi + "-" + ai).val(a.answer);
