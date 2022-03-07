@@ -32,7 +32,6 @@ axios
 
     temp.questions.forEach((q, qi) => {
       newQuestion(q.question);
-      $("q-" + qi).val(q.question);
       q.answers.forEach((a, ai) => {
         newAnswer(qi, a.answer, a.correct);
         $("#a-" + qi + "-" + ai).val(a.answer);
@@ -151,7 +150,9 @@ function newQuestion(question) {
     <li id="q-${newIndex}-body" class="list-group-item">
       <div class="d-flex bd-highlight">
         <div class="align-self-center p-2 flex-grow-1 bd-highlight">
-          <input id="q-${newIndex}" type="text" class="form-control" placeholder="Otázka" />
+          <input id="q-${newIndex}" type="text" class="form-control" placeholder="Otázka" ${
+    question ? "value=" + question : ""
+  } />
           <!-- Odpovědi -->
           <h2 class="fs-5 m-3">Odpovědi</h2>
           <ul id="q-${newIndex}-list" class="m-2 list-group">
@@ -232,12 +233,14 @@ function newAnswer(index, answer, correct) {
                     type="text"
                     class="form-control"
                     placeholder="Odpověď"
+                    ${answer ? "value=" + answer : ""}
                   />
                   <div class="m-3 form-check">
                     <input
                       id="a-${index}-${newIndex}-correct"
                       type="checkbox"
                       class="form-check-input"
+                      ${correct ? "checked=" + correct : ""}
                     />
                     <label class="form-check-label" for="a-${index}-${newIndex}-correct"
                       >Správná odpověď</label
