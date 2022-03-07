@@ -34,8 +34,6 @@ axios
       newQuestion(q.question);
       q.answers.forEach((a, ai) => {
         newAnswer(qi, a.answer, a.correct);
-        $("#a-" + qi + "-" + ai).val(a.answer);
-        $("#a-" + qi + "-" + ai + "-correct").prop("checked", a.correct);
       });
     });
   })
