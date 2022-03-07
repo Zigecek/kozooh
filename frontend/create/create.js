@@ -109,59 +109,9 @@ function createTemplate() {
 function newQuestion() {
   const newIndex = questions.length;
 
-  const html = $.parseHTML(`
-  <li id="q-${newIndex}-body" class="list-group-item">
-    <div class="d-flex bd-highlight">
-      <div class="align-self-center p-2 flex-grow-1 bd-highlight">
-        <input id="q-${newIndex}" type="text" class="form-control" placeholder="Otázka" />
-        <!-- Odpovědi -->
-        <h2 class="fs-5 m-3">Odpovědi</h2>
-        <ul id="q-${newIndex}-list" class="m-2 list-group">
-          <!-- Odpověď 1 -->
-          <li id="a-${newIndex}-0-body" class="list-group-item">
-            <div class="d-flex bd-highlight">
-              <div class="align-self-center p-2 flex-grow-1 bd-highlight">
-                <input
-                  id="a-${newIndex}-0"
-                  type="text"
-                  class="form-control"
-                  placeholder="Odpověď"
-                />
-                <div class="m-3 form-check">
-                  <input
-                    id="a-${newIndex}-0-correct"
-                    type="checkbox"
-                    class="form-check-input"
-                  />
-                  <label class="form-check-label" for="a-${newIndex}-0-correct"
-                    >Správná odpověď</label
-                  >
-                </div>
-              </div>
-              <div class="align-self-center p-2 bd-highlight">
-                <button
-                  onclick="deleteAnswer(${newIndex}, 0)"
-                  class="m-2 btn btn-sm btn-danger"
-                >
-                  Smazat
-                </button>
-              </div>
-            </div>
-          </li>
-        </ul>
-        <!-- Nová odpověď -->
-        <button class="btn btn-sm btn-primary" onclick="newAnswer(${newIndex})">
-          Nová odpověď
-        </button>
-      </div>
-      <div class="align-self-center p-2 bd-highlight">
-        <button onclick="deleteQuestion(${newIndex})" class="m-2 btn btn-sm btn-danger">
-          Smazat
-        </button>
-      </div>
-    </div>
-  </li>
-            `);
+  const html = $.parseHTML(
+    `<li id="q-${newIndex}-body" class="list-group-item"><div class="d-flex bd-highlight"><div class="align-self-center p-2 flex-grow-1 bd-highlight"><input id="q-${newIndex}" type="text" class="form-control" placeholder="Otázka" /><h2 class="fs-5 m-3">Odpovědi</h2><ul id="q-${newIndex}-list" class="m-2 list-group"><li id="a-${newIndex}-0-body" class="list-group-item"><div class="d-flex bd-highlight"><div class="align-self-center p-2 flex-grow-1 bd-highlight"><input id="a-${newIndex}-0" type="text" class="form-control" placeholder="Odpověď" /><div class="m-3 form-check"><input id="a-${newIndex}-0-correct" type="checkbox" class="form-check-input" /><label class="form-check-label" for="a-${newIndex}-0-correct">Správná odpověď</label></div></div><div class="align-self-center p-2 bd-highlight"><button onclick="deleteAnswer(${newIndex}, 0)" class="m-2 btn btn-sm btn-danger">Smazat</button></div></div></li></ul><!-- Nová odpověď --><button class="btn btn-sm btn-primary" onclick="newAnswer(${newIndex})">Nová odpověď</button></div><div class="align-self-center p-2 bd-highlight"><button onclick="deleteQuestion(${newIndex})" class="m-2 btn btn-sm btn-danger">Smazat</button></div></div></li>`
+  );
   $("#question-list").append(html);
   questions.push({
     question: "",
@@ -183,36 +133,7 @@ function deleteQuestion(index) {
 function newAnswer(index) {
   const newIndex = questions[index].answers.length;
   const html = $.parseHTML(
-    `<li id="a-${index}-${newIndex}-body" class="list-group-item">
-            <div class="d-flex bd-highlight">
-              <div class="align-self-center p-2 flex-grow-1 bd-highlight">
-                <input
-                  id="a-${index}-${newIndex}"
-                  type="text"
-                  class="form-control"
-                  placeholder="Odpověď"
-                />
-                <div class="m-3 form-check">
-                  <input
-                    id="a-${index}-${newIndex}-correct"
-                    type="checkbox"
-                    class="form-check-input"
-                  />
-                  <label class="form-check-label" for="a-${index}-${newIndex}-correct"
-                    >Správná odpověď</label
-                  >
-                </div>
-              </div>
-              <div class="align-self-center p-2 bd-highlight">
-                <button
-                  onclick="deleteAnswer(${index}, ${newIndex})"
-                  class="m-2 btn btn-sm btn-danger"
-                >
-                  Smazat
-                </button>
-              </div>
-            </div>
-          </li>`
+    `<li id="a-${index}-${newIndex}-body" class="list-group-item"><div class="d-flex bd-highlight"><div class="align-self-center p-2 flex-grow-1 bd-highlight"><input id="a-${index}-${newIndex}" type="text" class="form-control" placeholder="Odpověď" /><div class="m-3 form-check"><input id="a-${index}-${newIndex}-correct" type="checkbox" class="form-check-input" /><label class="form-check-label" for="a-${index}-${newIndex}-correct">Správná odpověď</label></div></div><div class="align-self-center p-2 bd-highlight"><button onclick="deleteAnswer(${index}, ${newIndex})" class="m-2 btn btn-sm btn-danger">Smazat</button></div></div></li>`
   );
   $(`#q-${index}-list`).append(html);
   questions[index].answers.push({
