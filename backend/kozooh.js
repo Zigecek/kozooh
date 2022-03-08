@@ -858,7 +858,7 @@ api.post("/create-template", auth, async (req, res) => {
   q2.forEach((x, i) => {
     if (x.answers.length == 0) {
       missingA = true;
-    } else if (x.answers.length > 5) {
+    } else if (x.answers.length > 4) {
       max4A = true;
     } else {
       var mis = false;
