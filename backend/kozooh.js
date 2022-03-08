@@ -854,9 +854,12 @@ api.post("/create-template", auth, async (req, res) => {
   var missingA = false;
   var missingCorrectA = false;
   var emptyA = false;
+  var max4A = false;
   q2.forEach((x, i) => {
     if (x.answers.length == 0) {
       missingA = true;
+    } else if (x.answers.length > 5) {
+      max4A = true;
     } else {
       var mis = false;
       x.answers.forEach((y, ii) => {
@@ -873,6 +876,11 @@ api.post("/create-template", auth, async (req, res) => {
   if (missingA) {
     return res.status(200).send({
       stav: "missingA",
+    });
+  }
+  if (max4A) {
+    return res.status(200).send({
+      stav: "max4A",
     });
   }
   if (emptyA) {

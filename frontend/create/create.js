@@ -99,6 +99,13 @@ function createTemplate() {
         );
       } else if (res.data.stav == "negative") {
         return alertos(5000, "danger", "Nemůžete použít záporné číslo.", 1000);
+      } else if (res.data.stav == "max4A") {
+        return alertos(
+          5000,
+          "danger",
+          "K jedné otázce lze zadat maximálně 4 odpovědi.",
+          1000
+        );
       }
     })
     .catch(function (error) {
