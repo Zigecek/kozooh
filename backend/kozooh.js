@@ -409,7 +409,7 @@ async function evaluate(gameID) {
   await xlsx(average, guests, gameID);
 
   io.to(gameID).emit("screen", {
-    is: "EVALUATION",
+    is: "END",
     average,
     guests,
   });
