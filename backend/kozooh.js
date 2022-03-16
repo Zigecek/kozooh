@@ -216,7 +216,7 @@ async function question(gameID) {
   }
 
   setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
+    game = await Game.findOne({ code: gameID });
     if (game.stageID == stageID) {
       result(gameID);
     }
@@ -276,7 +276,7 @@ async function result(gameID) {
       .map((x) => temp.questions[game.questionID].answers.indexOf(x)),
   });
   setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
+    game = await Game.findOne({ code: gameID });
     if (game.stageID == stageID) {
       pauseOrEvaluateOrContinue(gameID);
     }
@@ -288,7 +288,7 @@ async function pauseOrEvaluateOrContinue(gameID) {
   var temp = await Template.findOne({ id: game.template.id });
   if (game.questionID + 1 < temp.questions.length) {
     if (temp.pause) {
-      pause(gameID);
+      makePause(gameID);
     } else {
       question(gameID);
     }
@@ -296,7 +296,7 @@ async function pauseOrEvaluateOrContinue(gameID) {
     evaluate(gameID);
   }
 }
-async function pause(gameID) {
+async function makePause(gameID) {
   //////////////////////////////////////////////////// PAUSE
   var game = await Game.findOne({ code: gameID });
   var temp = await Template.findOne({ id: game.template.id });
@@ -325,7 +325,7 @@ async function pause(gameID) {
     })),
   });
   setTimeout(async () => {
-    var game = await Game.findOne({ code: gameID });
+    game = await Game.findOne({ code: gameID });
     if (game.stageID == stageID) {
       runCountdown(gameID);
     }
@@ -473,7 +473,7 @@ async function xlsx(average, guests, gameID) {
   pCol.alignment = { vertical: "middle", horizontal: "center" };
 
   /// Questions - sheet
-  var qSheet = workbook.addWorksheet("Questions");
+  //var qSheet = workbook.addWorksheet("Questions");
 
   try {
     var stream = fs.createWriteStream(
@@ -503,45 +503,41 @@ io.on("connection", (socket) => {
     var temp = await Template.findOne({ id: game.template.id });
     if (game) {
       var guest = game.guests.find((x) => x.socketID == socket.id);
-      if (guest) {
-        if (game.state.is == "QUESTION") {
-          if (
-            temp.questions[game.questionID]?.answers[index]?.correct == true
-          ) {
-            var time = Date.now() - game.questionTime;
-            var maxTime = temp.roundTime * 1000;
+      if (guest && game.state.is == "QUESTION") {
+        if (temp.questions[game.questionID]?.answers[index]?.correct) {
+          var time = Date.now() - game.questionTime;
+          var maxTime = temp.roundTime * 1000;
 
-            var coins = scaleValue(time, [0, maxTime], [1000, 600]);
+          var coins = scaleValue(time, [0, maxTime], [1000, 600]);
 
-            guest.answers.push({
-              correct: true,
-              index,
-              gainedCoins: coins,
-            });
-            guest.coins += coins;
-            await Game.updateOne(
-              { "guests.socketID": socket.id },
-              { $set: { "guests.$": guest } }
-            );
-          } else {
-            guest.answers.push({
-              correct: false,
-              index,
-              gainedCoins: 0,
-            });
-            await Game.updateOne(
-              { "guests.socketID": socket.id },
-              { $set: { "guests.$": guest } }
-            );
-          }
-          game = await Game.findOne({ code: gameID });
-          if (
-            game.guests.length ==
-            game.guests.filter((x) => x.answers.length == game.questionID + 1)
-              .length
-          ) {
-            result(gameID);
-          }
+          guest.answers.push({
+            correct: true,
+            index,
+            gainedCoins: coins,
+          });
+          guest.coins += coins;
+          await Game.updateOne(
+            { "guests.socketID": socket.id },
+            { $set: { "guests.$": guest } }
+          );
+        } else {
+          guest.answers.push({
+            correct: false,
+            index,
+            gainedCoins: 0,
+          });
+          await Game.updateOne(
+            { "guests.socketID": socket.id },
+            { $set: { "guests.$": guest } }
+          );
+        }
+        game = await Game.findOne({ code: gameID });
+        if (
+          game.guests.length ==
+          game.guests.filter((x) => x.answers.length == game.questionID + 1)
+            .length
+        ) {
+          result(gameID);
         }
       }
     }
@@ -552,47 +548,45 @@ api.post("/game-auth", async (req, res) => {
   const { gameID, sid } = req.body;
   if (!/^\d{6}$/.test(gameID)) return;
   var game = await Game.findOne({ code: gameID });
-  if (game) {
-    if (req.session?.user == game.author.username) {
-      await Game.findOneAndUpdate(
-        { code: gameID },
-        { $push: { controlers: sid } }
-      );
-      var socket = io.sockets.sockets.get(sid);
+  var socket = io.sockets.sockets.get(sid);
+  if (req.session?.user == game?.author.username) {
+    await Game.findOneAndUpdate(
+      { code: gameID },
+      { $push: { controlers: sid } }
+    );
+
+    if (socket) {
+      socket.emit("auth", {
+        role: "CONTROL",
+      });
+      socket.join(gameID);
+      socket.join(gameID + "control");
+    }
+  } else {
+    var guest = game.guests.find((g) => g.guestID == req.session.guestID);
+    if (guest) {
+      await Game.updateOne({ code: gameID }, { $pull: { guests: guest } });
+      guest.socketID = sid;
+      await Game.updateOne({ code: gameID }, { $push: { guests: guest } });
       if (socket) {
         socket.emit("auth", {
-          role: "CONTROL",
+          role: "GUEST",
+          nickname: guest.nickname,
+          coins: guest.coins,
         });
         socket.join(gameID);
-        socket.join(gameID + "control");
+        if (game.state.is == "STARTING") {
+          io.to(gameID).emit("screen", {
+            is: "STARTING",
+            guests: game.guests.map((g) => ({
+              nickname: g.nickname,
+              coins: g.coins,
+            })),
+          });
+        }
       }
     } else {
-      var guest = game.guests.find((g) => g.guestID == req.session.guestID);
-      if (guest) {
-        await Game.updateOne({ code: gameID }, { $pull: { guests: guest } });
-        guest.socketID = sid;
-        await Game.updateOne({ code: gameID }, { $push: { guests: guest } });
-        var socket = io.sockets.sockets.get(sid);
-        if (socket) {
-          socket.emit("auth", {
-            role: "GUEST",
-            nickname: guest.nickname,
-            coins: guest.coins,
-          });
-          socket.join(gameID);
-          if (game.state.is == "STARTING") {
-            io.to(gameID).emit("screen", {
-              is: "STARTING",
-              guests: game.guests.map((g) => ({
-                nickname: g.nickname,
-                coins: g.coins,
-              })),
-            });
-          }
-        }
-      } else {
-        io.sockets.sockets.get(sid)?.disconnect(true);
-      }
+      io.sockets.sockets.get(sid)?.disconnect(true);
     }
   }
   res.sendStatus(200);
@@ -601,7 +595,7 @@ api.post("/game-auth", async (req, res) => {
 api.get("/start", async (req, res) => {
   const id = req.query.id;
   const gameID = await getID();
-  var game = await Game.create({
+  await Game.create({
     _id: new require("mongoose").Types.ObjectId(),
     code: gameID,
     template: {
@@ -689,20 +683,12 @@ api.get("/user", async (req, res) => {
 });
 
 api.post("/log", async (req, res) => {
-  if (!req.body.username || !req.body.password) {
-    return res.status(200).send({
-      stav: "fillAll",
-    });
-  } else {
+  if (req.body.username && req.body.password) {
     const { username, password } = req.body;
     try {
       const user = await User.findOne({ username });
 
-      if (!user) {
-        return res.status(200).send({
-          stav: "userIsnt",
-        });
-      } else {
+      if (user) {
         if (user.verified.is) {
           if (user.password == password) {
             req.session.user = username;
@@ -719,19 +705,23 @@ api.post("/log", async (req, res) => {
             stav: "notVerified",
           });
         }
+      } else {
+        return res.status(200).send({
+          stav: "userIsnt",
+        });
       }
     } catch (error) {
       console.error(error);
     }
+  } else {
+    return res.status(200).send({
+      stav: "fillAll",
+    });
   }
 });
 
 api.post("/reg", async (req, res) => {
-  if (!req.body.username || !req.body.password || !req.body.email) {
-    return res.status(200).send({
-      stav: "fillAll",
-    });
-  } else {
+  if (req.body.username && req.body.password && req.body.email) {
     const { username, password, email } = req.body;
     try {
       const user1 = await User.findOne({ username });
@@ -779,7 +769,6 @@ api.post("/reg", async (req, res) => {
           (err, info) => {
             if (err) {
               console.error(err);
-              return;
             }
           }
         );
@@ -788,6 +777,10 @@ api.post("/reg", async (req, res) => {
     } catch (error) {
       console.error(error);
     }
+  } else {
+    return res.status(200).send({
+      stav: "fillAll",
+    });
   }
 });
 
@@ -867,7 +860,7 @@ api.post("/create-template", auth, async (req, res) => {
           mis = true;
         }
         if (/^\s+$/.test(y.answer)) {
-          emptyA.true;
+          emptyA = true;
         }
       });
       missingCorrectA = !mis;
@@ -896,8 +889,8 @@ api.post("/create-template", auth, async (req, res) => {
 
   // all checks have been done
 
-  if (edit.is == true) {
-    var temp = await Template.updateOne(
+  if (edit.is) {
+    await Template.updateOne(
       { id: edit.id },
       {
         questions: q2,
@@ -951,7 +944,7 @@ api.get("/ver", async (req, res) => {
   var verToken = req.query.token;
   try {
     const decoded = jwt.verify(verToken, process.env.VERTOKEN_KEY);
-    const user = await User.findOneAndUpdate(
+    await User.findOneAndUpdate(
       { _id: decoded.id },
       { verified: { is: true, when: Date.now() } }
     );
@@ -963,7 +956,7 @@ api.get("/ver", async (req, res) => {
 
 /////////////////////////////////////////////////////////////////////////// FILE RESULTS
 
-app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
+app.get(/\/results\/\d{6}.xlsx/, (req, res) => {
   fs.access(
     path.join(__dirname, "/results", path.basename(req.path)),
     fs.constants.F_OK,
@@ -977,9 +970,9 @@ app.get(/\/results\/[0-9]{6}.xlsx/, (req, res) => {
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             },
           },
-          (err) => {
-            if (err) {
-              console.error(err);
+          (errr) => {
+            if (errr) {
+              console.error(errr);
               return res.sendStatus(500);
             }
           }

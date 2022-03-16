@@ -57,16 +57,14 @@ function inputListeners() {
         input.addEventListener("input", (e) => {
           var splitID = input.id.split("-");
           splitID.shift();
+
+          var index = Number(splitID[0]);
+          var index2 = Number(splitID[1]);
           if (/^q-\d+$/.test(input.id)) {
-            var index = Number(splitID[0]);
             questions[index].question = input.value;
           } else if (/^a-\d+-\d+$/.test(input.id)) {
-            var index = Number(splitID[0]);
-            var index2 = Number(splitID[1]);
             questions[index].answers[index2].answer = input.value;
           } else if (/^a-\d+-\d+-correct$/.test(input.id)) {
-            var index = Number(splitID[0]);
-            var index2 = Number(splitID[1]);
             questions[index].answers[index2].correct = input.checked;
           }
           console.log(questions);

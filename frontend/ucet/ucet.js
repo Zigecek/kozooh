@@ -21,7 +21,6 @@ axios
           )
         );
       });
-    } else {
     }
   })
   .catch(function (error) {
